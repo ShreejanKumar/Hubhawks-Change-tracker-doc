@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+.venv/
+venv/
+env/
+
+.streamlit/secrets.toml
+
+.DS_Store
+*.log
+
+scratch_*

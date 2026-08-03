@@ -1,0 +1,264 @@
+copyright@vinibhati
+EDITORIAL WORKSHOP - SESSION 1
+LEVELS OF EDITING
+❖
+Developmental Editing
+❖
+Copyediting
+➢
+Line-editing
+➢
+Fact-checking
+❖
+Proofreading
+❖
+Spot-Checking
+❖
+Beta-reading
+● Developmental Editing/ Substantive Editing
+Involves detailed feedback and collaboration with the author on macro level
+issues in the manuscript. Focus on big-picture factors like plot coherence,
+compelling character arcs, powerful climax, chapter wise transitions and
+thematic considerations.
+● Factors to keep in mind during developmental editing
+○ What is the thematic statement of the story?
+■ Thematic statement the “central” or “controlling story
+idea,” the idea that guides you in writing your entire novel.
+It shapes the strategic choices you make as you write.
+■ If used skillfully, a thematic statement will make the story
+feel deeper, and touch readers on an emotional level. It may
+even change how they view the world and how they behave.
+○ Are the characters and settings complementing the genre of the
+book?
+○ Are the sequence of events in the story logically coherent?
+○ Does the actions of the characters align with their personality?
+○ Is the conflict and resolution compelling enough?
+○ Does the story have a balance of description and character
+conversations?
+○ Are the transitions between chapters and scenes smooth or
+abrupt?
+● Copy-editing and Line editing
+
+copyright@vinibhati
+Involves a closer look at the manuscript to ensure that the writing is more
+engaging and reader-friendly. We need to improve the clarity, coherency,
+consistency, and correctness of the language and address word-repetition.
+Broadly, we need to engage with the technicalities here and fix mechanical
+issues.
+Fact-Checking is an intrinsic part of copy-editing. Since the editor is working
+on a simpler software, it is easier to rectify factual errors. For fiction, fact-
+checking will involve checking word usage and their meanings, idioms and
+spellings.
+● Factors to keep in mind while copy-editing
+○ Spellings and typos
+○ Grammatical inconsistencies
+○ Capitalization issues.
+○ Avoid repetition of words
+○ Usage of numbers or numerals
+○ Tense inconsistencies
+○ Character names inconsistencies
+● Proofreading
+In this stage, the editor needs to take the reader’s perspective in mind. The
+editor will primarily be working on the designed file so you should keep an eye
+out on stylistic issues which can visually enhance the reading experience.
+● Factors to keep in mind while proofreading:
+○ Inconsistencies in layout and typography;
+○ Punctuation errors and the overuse of commas and semicolon
+○ Confusing page and word breaks;
+○ Incorrect captioning on any illustrations and page numbers in the
+contents.
+○ Spacing issues between words and lines
+○ Bold and Italics convention
+■ Anything that looks visually awkward needs to be flagged.
+○ Lingering typos and technical errors.
+● Coordination with the typesetter
+○ A proofreader is supposed to communicate with the typesetter as
+you will be editing the designed layout. A typesetter designs the
+
+copyright@vinibhati
+book so he/she is majorly technical in their approach. The
+instructions have to be short, clear and crisp. It should be phrased
+as a command and not as a suggestion.
+■ Incorrect Instruction: The word can be in italics
+■ Correct Instruction: Change the word in italics
+● TOOLS IN ADOBE PDF
+● Spot-Checking
+○ To be Conducted by Chief Editor/ Editor in Chief
+● Beta-reading
+○ The manuscript is shared with our target audience a.k.a a potential
+reader.
+THE THREE C’s- MANTRA OF EFFECTIVE EDITING
+❖
+CONSISTENCY
+➢
+The tone, character spellings, bold/italics formatting, spelling
+convention (US/UK English usage) have to be consistent everywhere.
+❖
+CONCISE WRITING
+➢
+Avoid long-winding and convoluted construction. Make the writing
+simple and elegant.
+❖
+CLARITY OF MEANING
+➢
+Weed out phrases and sentences which are vague and do not add
+anything to the plot or character evolution.
+
+copyright@vinibhati
+EDITING STYLESHEET
+● ORTHOGRAPHY
+○ Ideally follow British orthography, albeit with ‘z’ in words like civilize,
+organize, etc. But if you are following American orthography in some
+cases, that works too. Keep the orthography consistent throughout the
+book.
+● NUMBER:
+○ From one to hundred, these should be in words, and thereafter in
+numerals.
+○ Years and dates are always in numeral, as in 15 January 1999 (the date
+precedes the month; no comma after the month); similarly for a date
+without the year, e.g. 1 March.
+○ For fractions that are spelt out, print three-quarters/ two-thirds.
+○ Use the symbol % for a percentage; no space between numeral and
+symbol – 35%; in humanistic copy, the word percent should be used (one
+word)
+○ No apostrophe between the year and the ‘s’: 1990s.
+○ A single open close quote to highlight dates written thus: 90s’
+CAPITALS
+● Designations are capitalised when the designation is used as a prefix to the
+name. E.g. Prime Minister Narendra Modi, but in lower case otherwise, as in
+the Indian prime minister. Similarly, for ministries and organisations, capitals
+are used when the full title is used, as in Ministry of Education, but not when it
+is education ministry.
+● Specific terms like the Indian Army, Indian Air Force or Indian Navy are
+capitalised, but the words army, navy, etc., are lower case when standing alone
+or not part of an official title.
+● Partition is capitalised when referring to it as a noun, as in at the time of
+Partition; but not when used as a verb, as in the partition of India. Likewise
+with ‘independence’.
+● The Second World War, First World War, etc., would be capitalised.
+
+copyright@vinibhati
+● a.m. (ante meridiem), p.m. (post meridiem), should be in lower case, except in
+lines of capitals or small capitals.
+● Acronyms should always be explained in brackets in the first instance, as in All
+India Radio (AIR), and only the acronym used in subsequent references.
+FULL POINT
+● Use periods in the case of initials, as in J.P. Singh.
+● Abbreviations and contractions consisting of upper and lower cases take full
+points as in Mt. (Mount) St. (Saint) Ph.D (Doctor ‘of Philosophy), exceptions to
+be made for Rs, Dr (Doctor) Revd (Reverend: not Rev), Mr, Mrs, Mme, Mlle
+(Mademoiselle), Prof, Col - here full points are not required.
+ITALICS
+● Common/generic Indian words – masala, dhoti, kurta, salaam, ghazal, bhangra,
+bharatnatyam, kathak, ji, dada, mama, chacha – may be excluded from
+italicisation.
+● For uncommon non-English words, italicise in the first instance only to
+designate it as a non-English word, but keep in roman henceforth.
+● Use of italics should be kept to the minimum. Names of books and journals
+must be italicised (not in quotes) but not the titles of articles, poems, Ph.D
+theses and unpublished material.
+● Titles of plays, films and TV serials should be in italics.
+● etc. is always in roman typeface with a full point.
+● et al. is always in italics. Other non-English words, as in French, Latin etc. will
+be italicised.
+● Names of specific ships, aircrafts, etc., are italicised, but not abbreviations
+preceding them, e.g. HMS Mayflower.
+
+copyright@vinibhati
+CONNECTING PHRASES
+● In works of fiction, keep the use of conjunctions like ‘and’, ‘but’, ‘thus’, ‘hence’,
+‘since’, etc., to the minimum. Wherever possible, make the sentence complete
+without using these terms, or else join by N- dashes, or break the sentence.
+● However, it may be the author’s style to use conjunctions, in which case
+coordinate and work out a style with the author.
+● In some cases, however, two or more commas are necessary:
+○ The French, having occupied Portugal, began to advance into Spain.
+○ Be assured, then, that order, frugality, and economy are the necessary
+supporters of every personal and private virtue.
+DIALOGUE WRITING PUNCTUATION RULES
+I
+● Comma before the opening quotation mark.
+● Capital letter to indicate the beginning of a sentence inside the opening
+quotation mark.
+● Period to end the quoted sentence.
+● Closing quotation mark.
+○ Example: Mary said, “Call me tomorrow.”
+○ “Call me tomorrow,” Mary said.
+II
+● Capital letter to indicate the beginning of a sentence inside the opening
+quotation mark.
+● A comma to end the quoted sentence before the closing quotation mark that
+precedes the dialogue tag.
+● Dialogue tag at the end with a period to end the sentence.
+○ Example: “Call me,” Mary said, “tomorrow.”
+III
+● If some expression does not hint at the dialogue having been said out loud, it
+need not be preceded or followed by a comma.
+○ “I knew you won’t be able to make it.” He smirked/ smiled/ laughed/
+clicked his fingers/ turned around/ cheered.
+
+copyright@vinibhati
+IV
+● If a character is quoting someone else in their speech, you need to place this
+within quote marks as well. But to prevent confusion, you should use the
+opposite kind of quote marks as you use for the main quotation.
+○ For instance, if we were using single quotation marks for our main
+quote, we would use double quote marks for the quote-within-a-quote:
+○ ‘He called me an “arrogant fool” when I said I’d seen bigger horses.’
+○ Here, we use double quote marks around ‘arrogant fool’. This shows that
+the speaker is quoting someone else within their dialogue.
+V
+● A good guideline when formatting dialogue is ‘new speaker, new paragraph’.
+This means that when someone new starts speaking, you set the dialogue on a
+new line.
+○ For instance: Craig stared at the massive horse. ‘So huge,’ he muttered
+to himself.
+‘What are you doing?’ asked Shannon, emerging from the farmhouse.
+‘I’m watching this massive horse,’ Craig said.
+‘Well, I can see that,’ Shannon said. ‘But you’ve been here for six hours,
+Craig.’
+VI
+● One passage of dialogue may require multiple paragraphs.
+○ For instance, a character may be telling another character a story within
+a story as part of your narrative, which could involve speaking at length.
+○ Use a quotation mark at the start of each paragraph when formatting
+dialogue. However, you will only use a closing quotation mark when the
+character finally finishes speaking.
+○ Example: Craig sighed. ‘I’ve always been obsessed with horses,’ he
+explained. ‘When I was a child, I spent weekends on my grandparents’
+farm. But all they had were miniature ponies. And they told me that all
+
+copyright@vinibhati
+horses were the same size. They said the ones I saw on television looked
+bigger because they hired tiny actors to ride them. And I believed it.
+‘Or, I did until I was eighteen, anyway. That’s when I met Clayton
+Moore, the guy who played the Lone Ranger on TV. And he was over six
+feet tall, so I knew that Silver couldn’t have been as small as the ponies
+on my grandparents’ farm! It had all been a lie! I felt so betrayed. And
+ever since then, I have been looking for the biggest horse I can find.’
+VII
+● Use ellipses to show that speech has trailed off.
+○ Example: ‘I don’t know why you have a problem with…’ Craig said, before
+falling into silence.
+VIII
+● Use capitalization to indicate the end of the sentence.
+○ When writing dialogue, only capitalize the first letter of a word to
+indicate the end of the sentence.
+■ When using quotations, though, capitalization in mid-sentence is
+common. More specifically, when quotations form complete
+sentences, they must be capitalized no matter where they appear
+in the main sentence. All of the sentences below are correct, for
+example:
+Matthew said, “In that case, I’m going out for a walk!”
+“We are not amused.” – Queen Victoria
+Neil Young’s admonishment “It’s better to burn out than it is to
+rust” is not appreciated by everyone.
+○ There may be times when you end the quote with punctuation that would
+normally require the next word to be capitalized, such as an exclamation
+point or question mark. But unless the sentence is truly over, use a
+lowercase letter to follow this punctuation.
+
+copyright@vinibhati
+○ Example: "He's here! He's here!" she screamed.
+"Would you like to answer the door?" she asked.
+"What do you mean," he said to Jenna, "by asking me to dinner?"

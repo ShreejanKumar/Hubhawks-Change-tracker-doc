@@ -1,0 +1,636 @@
+Note: please key in your updates in red.
+PENGUIN RANDOM HOUSE INDIA STYLE GUIDE
+Additional style guide elements to keep in mind:
+• jugdment without e for cases
+• judgement with e for other instances
+• Adjectives positioning
+• Opinion or quality of noun> size>age> shape>color>origin or material>a
+qualifier. But before stating adjectives of quality the adjectives of quantity
+or numeral adjectives must be there. All these are used as per the
+availability and need of the description of a noun in a sentence.
+• Adjectives arrangement:
+• opinion-size-age-shape-colour-origin-material-purpose noun
+• him and me
+• he and I
+• us and me
+• we and I
+• Citing Penguin in footnotes:
+- Pre-2013 (merger): Penguin Books India, New Delhi
+- 2014 onwards: PRHI, Gurgaon
+• North-east, North-eastern states, north-eastern direction
+• The Economist, The Times, The Hindu: only these three instances will the
+The be capitalized and italicized
+• Wire, Firstpost, Livemint, ThePrint, Quint: all in roman
+• India Today, Week, DNA: in itals
+
+• Indian Subcontinent (7 countries): India, Pakistan, Bangladesh, Sri Lanka,
+Nepal, Bhutan and the Maldives.
+• To find acronyms in Word: <[A-Z]{2,}> (in Wildcard mode)
+• To find straight apostrophes in Word, you’d type: ^39
+• You use ^34 to find straight double quotes
+• Italics (of vernacular, local words and those not found in the OED) on the
+first appearance only
+• Food items, names of trees etc. are not italicized
+• How songs are treated: ‘The Continental’, ‘Night and Day’, ‘Norwegian
+Wood’
+• NUMBER RANGES ARE DENOTED BY EN DASHES, NOT
+HYPHENS
+Guide to capitalizing headlines:
+Capitalize
+Don’t capitalize
+Prepositions in, on, like, at, of, by, for, into, with, from, between, beyond,
+about, than, without, against
+Articles a, an, the
+Conjunctions and, but, if, or, than, yet
+Pronoun it, this, these, those, that, what, her, who, his, us, oneself, any
+Verb is, was, be, am, are, were, being, been, should
+
+Determiner its, his, any, my
+Adverb as, up, not
+GLOBALS:
+Check for double spaces, double quotes, space before a comma, space before a
+full stop, space before a quotation mark, spaces before en dash, em dash and
+hyphens
+Check for British spellings; look out for:
+- ise (lise, nise, tise, sise, vise, mise, gise, rise, dise)
+- isa (lisa, nisa, tisa, misa, risa)
+- isi (tisi, gisi, nisi, sisi, misi, visi, risi)
+- thise (sympathize)
+- yse, yze
+- or (lor, vor, bor, nor)
+- our, tt, ll, tre, ter, nce, nse, tice, tise, cuss
+- Space before every footnote begins
+- Dots between initials
+- 2016 —
+- Period dots before FNs
+- zero to
+- numbers
+
+- sub-
+- lakh not lakhs
+- crore not crores
+Curly quotes not copy-pasted ones (')
+For example, to find straight apostrophes in Word, you'd type: ^39
+You use ^34 to find straight double quotes.
+Check ellipsis (there should be one space between each dot)
+Check double dots
+Check double quotes (we only use single quotes to begin with, and double
+quotes for a quote within a quote)
+per cent, NOT % or percent
+Mr, Mrs, Ms, Dr, the Internet, YouTube, WhatsApp: correct spellings
+… . . .
+.’
+
+.”
+-
+Abbreviations
+• An abbreviation that is a contraction, i.e. that retains its first and last letters,
+should appear without a stop, e.g. Mr, Ms, Mrs, Dr, St (for street and Saint).
+• But an abbreviation that does not retain its original last letter must appear
+with a stop, e.g. Prof., Maj., Capt.
+• For abbreviated names, there are stops but no spaces between initials, but a
+space after, e.g. A.P.J. Abdul Kalam.
+• There are stops in etc., e.g., i.e.
+• There are no stops in measurements, e.g. 7 cm, 11 kg
+• There are stops after abbreviated names of parts of a book, e.g. vol. 5(Or v.
+5), no. 3, sec. 11, p. 92.
+• Do not use abbreviations like lit. crit for literary criticism.
+• Do not use & in place of and except in an abbreviation. Thus, Jammu and
+Kashmir not Jammu & Kashmir, but J & K, not J and K.
+• Educational degrees like BA, MA, MBBS, BTech, MPhil and PhD are used
+abbreviated but with no stops.
+• There are no stops in abbreviated names of states like UP, MP, HP, WB.
+• It is fine to use commonly understood abbreviations like USA and UK or TV
+(not tv) and CD (not cd).
+• But abbreviations like CBI or NASA should be spelt out on first appearance
+and abbreviated thereafter.
+• Party names like BJP, VHP, CPI and AIADMK should be spelt out on first
+appearance.
+• Organizational or institutional names like DRDO, PMO, SAIL, TELCO etc.
+should be spelt out on first appearance.
+• For PM, CM, MP, MLA etc. the full form should be used where the use is
+sparing.
+
+Bias, Libel, Parochialism
+• Bias (typically gender bias or sectarian bias) is easy to spot and rectify.
+Evaluative judgements made on the basis of a person’s gender and about the
+class/caste/regional identity of an individual or group should always be
+interrogated. Gender neutrality in particular must be striven for in a culture
+that is still coded in patriarchy. A country, ship or nature should be referred
+to as ‘it’, not ‘she’.
+• Parochialism is sometimes more difficult to identify because it tends to
+perpetuate clichés arising from an insular, narrow-minded view of
+proceedings. Parochialism based on class, religion and regional identity
+should be watched out for, in particular.
+• Libel constitutes of a questionable or legally objectionable statement tending
+to discredit a person or persons that the publisher can be sued for. These
+should be carefully identified and cleared with a lawyer before publication.
+Capitalization
+Capitals should be used sparingly, but the following instances demand them:
+• Titular heads like the President (of a country). However, say the president of
+an organization. Note that chief justice, chief minister and prime minister
+should either be all lower case or all upper case. Secretary (as a government
+official) is upper case while minister is lower case. Example, the President
+of the United States v/s the president of a local organization.
+• Also, the Speaker, the Governor, the Parliament, the Supreme Court, a
+specific high court (e.g. ‘Patna High Court’, but ‘the high court’), the Lok
+Sabha and the Rajya Sabha. For MLAs and MPs, the full forms are members
+of Parliament and members of the Legislative Assembly.
+• Union as in the Union cabinet, the Union finance ministry. Centre as in the
+Central government. The Constitution. Articles of the Constitution. Note that
+ministries, governments and assemblies are lower case.
+• The Opposition, as in ‘leader of the Opposition’.
+• The Valley, when referring to Kashmir.
+• God as in the Christian divinity. But ‘gods’ are lower case.
+• Independence and Partition, when referring to the actual event that took
+place in 1947.
+
+• Community names like Muslim and Brahmin. But scheduled caste, adivasi.
+Where identity is politicized it should be in caps, e.g. Harijans, Dalits.
+• Trade names like Xerox, Boeing, Pepsi.
+• Full names of organizations like the Council for Scientific and Industrial
+Research. Can subsequently be referred to as the council.
+• Political persuasions like communism, fascism, socialism are lower case.
+Marxism is capitalized.
+• A geographical region is not capitalized. Thus, south India, east Bengal.
+• When a designation is used as an adjective, it is capitalized. Thus, Defence
+Minister George Fernandes. But, former defence minister Arun Singh.
+Currencies and Calculations
+• The units are thousands, lakh and crore for India, and million elsewhere. The
+house style is Rs 5 lakh, and ‘Rs 5-lakh deficit’ (where the amount is used as
+an adjective). There is no stop after Rs but there is a space between the
+currency and the amount, e.g. Rs 450. For pound, sterling and dollars,
+however, there is no space (£45, $70).
+Dates
+• The house style is 15 August 1947; 15 August; and August 1947, with no
+commas separating the day, month and year.
+Indian Words
+• Commonly understood words from Hindi and other major Indian languages
+should not be italicized; they should be integrated into the text and not made
+to stand out.
+• There can of course be some debate over what is a commonly understood
+word, and to whom. If there is doubt about the meaning of a word, it should
+always be explained in its context in the text.
+• Sentences or part-sentences in a regional language should always be
+italicized and the meaning given in parenthesis.
+• Footnotes explaining the meaning of Indian words should be avoided at all
+costs since they draw unnecessary attention to the ‘alienness’ of vernacular
+words. Italicization on first appearance is equally unacceptable for the same
+reasons. A glossary may be provided, if necessary, but it is better to try to
+
+explain the meaning in the text itself. Alternately, notes (not footnotes) on
+the text can be incorporated.
+• An unnecessary pile-up of Indian words and expressions, especially where
+these interfere with the meaning being understood, is to be avoided.
+Italicization
+• Words and phrases from foreign languages that are in common use in
+English should not be italicized. Thus, nouveau riche, ad nauseam, etc.
+should be Rom. Foreign words and phrases that are not commonly
+understood should be avoided altogether.
+• The name of a complete work, e.g. a book, a film, a newspaper, a television
+show, a symphony, is italicized.
+• The name of an article, essay etc., is not italicized but put within quotes.
+Note: when italicizing the name of a periodical, do not italicize the initial
+‘the’ even if it is part of the periodical’s printed title (e.g. the Times of
+India).
+• Oral epics like the Iliad, the Odyssey, the Ramayana and the Mahabharata
+are Rom, as is the Bible.
+Numbers
+• 0 to 99 will be spelt out as zero to ninety-nine.
+• Numbers beyond twenty will be hyphenated, e.g. ‘fifty-one’.
+• Numbers from 100 onward will be written in figures.
+• Figures beyond 10,000 will be separated by commas for every two digits,
+e.g. 20,000, 1,20,000, 12,20,000.
+• Sport scores are always in figures, e.g. 7 runs, 1 over, 15 points.
+• Percentages are in figures, e.g. 82.3 per cent. (Per cent is two words. Do not
+use %)
+• Continuous numbers are in double digits. Thus, 9–11, 15–17, 29–33, 98–
+101, 117–19, 125–32. Also, for dates, 1899–1947, 1911–14, 1947–84,
+1999–2001, 2002–04, etc.
+Punctuation
+• Refer to the Penguin Guide to Punctuation.
+• Briefly, commas are of four types:
+
+o The listing/serial/Oxford comma is used in a list where and or or would be
+possible instead. Example: I bought apples, oranges, and bananas.
+o The joining comma is used before and, or, but, yet or while when they join
+two complete sentences. Example: I wanted to go for a walk, but it started
+raining.
+o The gapping comma is used to show that words have been omitted instead
+of repeated. Example: She likes hiking; he, swimming.
+o A pair of bracketing commas is used to set off a weak interruption.
+Example: My brother, who lives in London, is visiting us next week.
+• Semi-colons should be used to distinguish disparate sections of a long
+sentence.
+• Em dashes (—) should be used to demarcate a parenthetical part of a
+sentence or a digression from the main argument. There should be no spaces
+before and after an em dash.
+• En dashes (–) should be used not as substitutes for em dashes but only in
+place of a hyphen when the two quantities separated are equal and/or
+reciprocal, e.g. the 1914–18 war, the Mumbai–Pune road, the Nehru–
+Gandhi family. For the year 1998–99 etc., use an en dash.
+• An ellipsis of three separated points, with a space before and after ( . . . ) is
+used to indicate breaks in speech or argument.
+• For parentheses, a single bracket ( ) should be used. For parenthesis within
+parenthesis, square brackets [ ] should be used.
+Quotes
+• The Penguin style for quotations is to use single quote (‘ ’) marks.
+• For quotes within quotes, double quote marks (“ ”) are to be used.
+• For quotes within quotes within quotes, single quote marks are to be used
+again.
+• Where a complete sentence is quoted, the closing quote mark should come
+after the stop (.’). Where a phrase or a section of a sentence is quoted, the
+closing quote mark should come before the stop (’.).
+• Language should not be changed to Penguin specifications within quoted
+sections.
+• An ellipsis of three separated points with a space before and after ( . . . )
+should be used to indicate breaks in quoted material.
+
+• Quoted material longer than fifty words and poetry longer than two lines
+should be set apart from the text (in smaller point size where necessary) and
+indented one em on both sides.
+• Permissions for quoted material longer than 100 words should be obtained
+well in advance.
+Time
+• ce and bce: both are in small caps, with no stops separating the letters.
+• a.m. and p.m.: always lower case, and with stops after both letters. It is
+always better to say 6 a.m. or 6 p.m. than 6 o’clock, which is vague.
+• Do not use the 24-hour clock, as in ‘1800 hours’ unless the context
+specifically demands it.
+• The hour and minutes in ‘6.45 p.m.’ should be separated by a stop and not a
+colon.
+SPELLING AND CORRECT USAGE
+Ground Rules of Spelling
+• ‘z’ rather than ‘s’ and ‘-ize’ rather than ‘-ise’. Thus, ‘organization’ not
+‘organisation’; ‘standardize’ not ‘standardise’.
+However, the following words must be spelt -ise, not -ize:
+advertise franchise
+apprise merchandise
+braise premise
+chastise prise
+circumcise reprise
+comprise revise
+despise supervise
+
+devise surmise
+enterprise surprise
+exercise televise
+• Also, analyse, catalyse, paralyse etc. should be spelt -yse, not -yze.
+• British rather than American spellings.
+• Thus, -ae- rather than -e- in anaemia, archaeology etc.
+-ce rather than -se in defence, offence, pretence etc.
+em- and en- rather than im- and in- in embed, enclose etc.
+-l- rather than -ll- in fulfil, instalment, skilful, wilful etc.
+-ll- rather than -l- in marvellous, woollen etc.
+-lled and -ller rather than -led and -ler in travelled, traveller etc.
+-ou- rather than -o- in mould, honour, labour etc.
+-oue- rather than -eu- in manoeuvre etc.
+-que- rather than -ck- in cheque, chequered etc.
+-re rather then -er in calibre, centre, litre, kilometre, sombre, theatre etc.
+Troublesome Words
+Affect/Effect Affect means to act upon or influence. To
+effect is to produce or accomplish.
+All right Not ‘alright’.
+Along with Not ‘alongwith’.
+Among/between Between emphasizes the individual, among
+the group. Logically, between should be
+used to indicate reciprocal relationships, and
+among collective ones.
+Any more Not ‘anymore’.
+Any time Not ‘anytime’.
+Anything, anywhere, anyway, anyone One word.
+
+Appraise/Apprise Appraise means to evaluate, set a
+price on. Apprise means to inform.
+Benefited/Benefiting Not benefitted/benefitting.
+Bi-monthly/-weekly Avoid using, since the meaning is
+ambiguous.
+Can, may, will, shall Can apply to what is possible; may
+applies to what is permissible; will
+expresses simple futurity; shall
+expresses a sense of definitiveness
+and determination.
+Careen/career For a runaway vehicle, to careen is to
+sway or tilt dangerously. Career refers
+simply to uncontrolled movement.
+Celibacy Refers to marital status, not to sexual
+abstinence.
+Centre on Not ‘centre around’, as common
+parlance has it. You can circle around
+something, but centering around
+something is physically impossible.
+Compare to/with Compare to is used to liken things,
+compare with to consider their
+similarities and differences.
+Complacent/complaisant If you are complacent, you are
+pleased with yourself. If you are
+complaisant, you are eager to please
+others.
+Comprise Is not followed by of, unlike consist
+and compose. The whole comprises
+the parts.
+Confidant Applies only to a man. A woman
+would be a confidante.
+
+Continual/continuous Continual refers to things that happen
+repeatedly but not constantly;
+continuous indicates an unbroken
+sequence.
+Country, nation Country refers to geographical
+identity, nation to political and social
+identity.
+Dangling modifier Can cause much amusement, but
+often goes undetected. Is typically
+caused by an unattached present
+participle. Example: ‘Handing me my
+whisky, his face broke into a smile’,
+which conjures up the image of a face
+that can pass a whisky. Should be
+rewritten as: ‘As he handed me my
+whisky, his face broke into a smile.’
+Data Is actually plural, but is generally
+used as singular: no one says ‘datum’
+any more. It is best to avoid
+constructions like ‘The data
+show/shows that . . . ’
+Decimate Literal meaning: reduce by a tenth.
+Should never be used to indicate
+annihilation.
+Defuse/diffuse To defuse is to quickly and
+completely allay, as in defusing a
+bomb. To diffuse is to distribute
+evenly and therefore diminish.
+Dependant/dependent Dependant is the noun, dependent the
+adjective.
+Deprecate/depreciate To depreciate is to decrease the
+importance of something. To
+deprecate is to disapprove strongly.
+De rigueur Not ‘de rigeur’.
+
+Different One thing is different from another;
+not different to.
+Dilemma, Hobson’s choice Both are often misused. To be in a
+dilemma is to be faced with two
+options, both of which are
+unsatisfactory. A Hobson’s choice is
+no choice at all.
+Disinterested Is not the same as uninterested.
+Disinterested means impartial,
+unbiased.
+Empathy/sympathy Empathy with; sympathy for.
+Every day/Everyday Everyday is one word only when used
+as an adjective, e.g. ‘everyday
+occurrence’.
+Farther/further Farther refers to literal (and therefore
+measurable) distance, further to
+figurative distance.
+Fiancé A man whom one is engaged to. The
+female version is fiancée.
+Flaunt/Flout To flaunt is to show off. To flout is to
+mock or insult.
+Flounder/founder To founder is to sink. To flounder is
+to flail about helplessly.
+Forbear/forebear To forbear is to abstain. A forebear is
+an ancestor.
+Forever/for ever ‘For ever’ refers to a very long period
+of time, ‘ever’ being the measurement
+of that time. ‘Forever’ means always.
+Forego/forgo To forego is to precede. To forgo is to
+do without.
+
+Fortuitous Means accidental. Has nothing to do
+with ‘fortunate’.
+Fulsome Does not mean lavish or wholesome
+as is often supposed, but odious,
+overfull.
+Graffiti Is plural. The singular is graffito.
+Homogenous/-geneous Homogenous means of common
+ancestry. Homogeneous refers to
+uniformity.
+Hour, heir, honest, honour The only words starting with h where
+the h is silent, and which need to be
+preceded by an, rather than a.
+Historian/historical and hotel should
+be preceded by a, not an.
+Inchoate Means nascent, incipient, not
+disorganized.
+Ingenious/Ingenuous Ingenious means skilful, clever.
+Ingenuous means frank, free from
+deception.
+Insidious/invidious Insidious indicates the stealthy spread
+of something undesirable. Invidious
+means offensive.
+In spite of Not ‘inspite of’.
+Its/It’s The most common mistake still. ‘Its’
+is the possessive form of ‘it’; ‘it’s’ is
+an abbreviation for ‘it is’.
+Just deserts Not ‘just desserts’. The phrase refers
+to what one deserves, and has nothing
+to do with food.
+Leitmotif Not leitmotiv.
+Licence/license Licence is the noun, license the verb.
+
+Light years A measure of distance, not time.
+Media Though actually plural of medium,
+this can safely be used as singular.
+Men’s, women’s, children’s The apostrophe should come before
+the s, since the words are already
+plural.
+Mixed metaphors Almost invariably the result of
+ignoring the literal meaning of a
+sentence because it sounds good. A
+lot of ‘good’ writing—Shakespeare’s,
+for instance— is full of mixed
+metaphors, e.g. ‘take arms against a
+sea of troubles’. Some mixed
+metaphors can be pretty offensive:
+‘This is a virgin territory pregnant
+with possibilities’. It’s an editor’s
+job to remove such problematic
+constructions and clean the language
+up.
+Nauseous/nauseated Nauseous can be used to describe
+something that nauseates one, not to
+describe the state of nausea. ‘I am
+feeling nauseous’ is as wrong as ‘I am
+feeling poisonous’.
+Neither ... nor ‘Neither’ has to be followed by ‘nor’;
+it cannot be followed by ‘or’.
+Non sequiturs A combination of two or more
+unrelated statements, often resulting
+from the urge to pack in too much
+information into one sentence.
+Example: ‘A resident of Vasant
+Vihar, he was tall, handsome and
+drove a red Maruti.’ The three parts of
+this sentence have nothing to do with
+each other. Non sequiturs can make
+
+otherwise good writing look
+ridiculous, and should be avoided at
+all costs.
+No sooner ... than If a sentence begins with ‘no sooner’,
+it has to continue with ‘than’,
+otherwise the construction makes no
+sense.
+Not only ... but If a sentence begins with ‘not only’, it
+has to continue with ‘but’ and not
+some other conjunction.
+On to/onto Avoid using ‘onto’ as one word.
+Perspicacity/perspicuity Perspicacity means shrewdness and
+applies to people; perspicuity means
+easily understood and applies to
+things.
+Practice/Practise Practice is the noun, practise the verb.
+Principal/principle Principle means ‘fundamental’ and is
+always a noun. Principal means ‘of
+first importance’ and can be used both
+as noun and adjective.
+Prodigal/prodigious Prodigal means recklessly wasteful.
+Prodigious means immense.
+Prophecy/prophesy Prophecy is the noun, prophesy the
+verb.
+Prototype A prototype is the original model on
+which all later models and variations
+are based. Not any role model can be
+referred to as prototype.
+Pyrrhic victory Not a hollow victory, but one won at
+great cost.
+Rack/wrack Wrack is simply an old-fashioned
+word for wreck. Often when we use
+
+wrack we mean rack, which is to put
+under strain. Thus, the correct
+expressions are: ‘a world racked by
+political crisis’, ‘nerve-racking’ and
+‘to rack one’s brains’.
+Riveted/Riveting Not rivetted/rivetting.
+Sensual/sensuous Sensuous means being alive to
+sensations, specifically not sexual,
+which sensual connotes.
+Shambles ‘In a shambles’, not ‘in shambles’.
+Some time/Sometime One word, except when ‘some’ is
+being used as a separate adjective.
+Split infinitive Refer to Troublesome Words. Bryson
+quotes Partridge: ‘Avoid the split
+infinitive wherever possible; bit if it is
+the clearest and most natural
+construction, use it boldly. The angels
+are on our side’.
+Stationary/Stationery Stationary means something that is at
+a standstill. Stationery is paper, pen,
+etc.
+Travel up/down Something that is usually not paid
+attention to. To travel up is to travel
+north; to travel down is to travel
+south. So you can travel up from
+Delhi to Chandigarh but must
+travel down from Mumbai to
+Bangalore. This gets confusing with
+trains because any train headed
+towards Delhi, including those
+originating from Jammu or Amritsar,
+are Up trains. In such cases it’s safer
+to avoid using up/down altogether.
+
+Turbid/turgid Turbid means impenetrable. Turgid
+means inflated, grandiloquent.
+Venal/venial Venal means corruptible. Venial
+means excusable. A venial sin is a
+minor one.
+Who/whom Whom is used when it is the object of
+a preposition (‘to whom it may
+concern’) or verb (‘the man whom we
+saw last night’). Who is used in all
+other cases.
+Hyphenated Words/One Word/Two Words
+The list of standardized hyphenations/one word/two words is too lengthy to be
+included here. Please consult the Oxford Dictionary for Writers and Editors
+whenever in doubt. Most usages of hyphenation will also be found to be
+standardized in Penguin India publications. Interpretations of what should be
+hyphenated or one word/two words is often somewhat subjective, and often variant
+usages are not necessarily incorrect. What is crucial is that these usages be
+completely consistent within a particular text.
+Penguin India Standardized Spellings
+For the following words, more than one correct spelling exists in the English
+language. In order to standardize usage, Penguin India has chosen the following
+variants for its house style.
+acknowledgement not acknowledgment
+advisable not adviseable
+adviser not advisor
+
+ageing not aging
+appendices not appendixes
+arguable not argueable
+artefact not artifact
+by-law not bye-law
+centring not centering
+connection not connexion
+dispatch not despatch
+encyclopedia not encyclopaedia
+focused not focussed.
+grey not gray
+gypsy not gipsy
+guerrilla not guerilla
+inflection not inflexion
+inquiry not enquiry
+judgement not judgment (but use judgment in legal works)
+medieval not mediaeval
+movable not moveable (but use moveable in legal works)
+normality not normalcy
+programme not program (but computer program)
+reflection not reflexion
+sceptical not skeptical
+storey not story
+
+towards not toward
+veranda not verandah
+Commonly Misspelt Words
+The following is a list of commonly misspelt words which editors should be careful
+of.
+accommodate two c’s and two m’s
+anoint only one n
+battalion only one l
+desiccate one s, two c’s
+embarrassment two r’s and two s’s
+harass only one r
+idiosyncrasy not idiosyncracy
+manoeuvre not manouever
+millennium two l’s and two n’s
+minuscule not miniscule
+octogenarian not octagenarian
+omelette not ommelette
+pavilion only one l
+queuing not queueing
+restaurateur not restauranteur
+sacrilegious not sacreligious
+
+septuagenarian not septagenarian
+siege not seige
+stratagem not strategem
+stupefied not stupified
+stupefaction not stupefication
+supersede not supercede
+vermilion only one l
+Accented Words
+Words originating in European languages (especially French) appear in Roman
+but with the necessary accents in Penguin India publications (e.g. naïve, vis-à-vis,
+table d’hôte etc.). Please consult the Oxford Dictionary for Writers and Editors for
+the correct use of accents.
+Place Names
+The following are the standardized Penguin India spellings of commonly used
+place names.
+Chandigarh not Chandigar or Chandhigar
+Chennai not Madras, except in a reference to a time before the renaming.
+Dhaka not Dacca, except in a reference to old British usage.
+Ganga not Ganges
+Jalandhar not Jullandar, Jullender or Jullandhar.
+Kanpur not Cawnpore or Kanpore.
+Kochi not Cochin, except in old usage.
+Kolkata not Calcutta, except in reference to a time before the renaming.
+
+Mumbai not Bombay, except in a reference to a time before the
+renaming, or in a specifically political refusal to abjure the old
+name.
+Pune not Puna or Poona.
+Thiruvananthapuram not Trivandrum, except in old usage
