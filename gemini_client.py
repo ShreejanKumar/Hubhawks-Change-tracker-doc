@@ -30,19 +30,59 @@ Rules you MUST follow:
   non-English text into English. Leave them unchanged unless they contain an
   obvious typographical error.
 - Preserve the author's original wording wherever it is not actually incorrect.
-- Follow the {variant} English convention consistently in all suggestions.
-- Apply the style guide below wherever it is relevant (numbers, capitalization,
-  punctuation, abbreviations, italics conventions, etc.).
+
+Before changing any word, read the full sentence — and the surrounding
+paragraphs you were given, where relevant — and confirm the change is
+correct in that context. Never substitute a word purely because it matches a
+spelling pattern or dictionary entry: a substitution that is technically a
+valid English word but wrong or archaic in context (for example swapping
+"filter" for "philtre", or "draft" for "draught" when the sense is a written
+draft) is a worse error than leaving the original word alone.
+
+Actively check for, and correct, all of the following. These are real
+errors, not stylistic choices, and are in scope even where they require
+reading more than one word at a time:
+- Missing, doubled, or repeated words (e.g. "the the", "and and").
+- Subject-verb agreement and verb tense errors, including a verb tense that
+  is inconsistent with the tense used in the surrounding sentences of the
+  same scene.
+- Missing or incorrect punctuation around direct address and vocatives
+  (e.g. "Good morning Sanjay" needs a comma: "Good morning, Sanjay").
+- Inconsistent quotation marks, spacing around punctuation, and misplaced or
+  missing commas.
+- Incomplete or malformed sentences, and incorrect contractions
+  (e.g. "dint" for "didn't").
+- Unnatural or incorrect idioms, prepositions, and fixed expressions (e.g.
+  "did not leave the sight of him" should read "did not let him out of his
+  sight"). Correct only the broken phrase itself, not the rest of the sentence.
+- Redundant phrasing within a sentence, such as an unnecessary repeated verb
+  or noun construction (e.g. "tried to lift the box and tried to fit it in"
+  can drop the second "tried to"). Tighten only the specific redundant
+  words — do not otherwise rephrase the sentence.
+- Capitalization, hyphenation, and spelling of a given term or name kept
+  consistent every time it recurs across the paragraphs you were given in
+  this request (e.g. if "MOSSAD" should read "Mossad", correct every
+  occurrence you see, not just the first).
+- The {variant} English convention applied consistently and correctly to
+  every word, including less common vocabulary — but only to words that are
+  genuinely spelling variants of each other in the sense used; never change
+  a word into a different word that happens to be spelled similarly.
+
+Apply the style guide below wherever it is relevant (numbers, capitalization,
+punctuation, abbreviations, italics conventions, etc.).
 
 STYLE GUIDE:
 {style_guide}
 
-You will receive a JSON array of paragraphs, each with an "id" and "text".
-Return a JSON array with EXACTLY one corrected entry per input paragraph, in
-any order, each with the same "id" and a "corrected_text" field. If a
-paragraph needs no changes, return its "text" unchanged as "corrected_text".
-Never omit, merge, or split paragraphs — the set of ids in your response must
-exactly match the set of ids you were given."""
+You will receive a JSON array of paragraphs, each with an "id" and "text",
+in their original document order. Use the surrounding paragraphs as context
+for tense and terminology consistency, but return corrections for each
+paragraph independently. Return a JSON array with EXACTLY one corrected
+entry per input paragraph, in any order, each with the same "id" and a
+"corrected_text" field. If a paragraph needs no changes, return its "text"
+unchanged as "corrected_text". Never omit, merge, or split paragraphs — the
+set of ids in your response must exactly match the set of ids you were
+given."""
 
 
 @st.cache_resource
@@ -74,7 +114,7 @@ def _call_gemini(
             system_instruction=system_instruction,
             response_mime_type="application/json",
             response_schema=list[ParagraphCorrection],
-            thinking_config=types.ThinkingConfig(thinking_budget=0),
+            thinking_config=types.ThinkingConfig(thinking_budget=-1),
             temperature=0,
         ),
     )

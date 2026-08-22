@@ -1,5 +1,5 @@
-"""Orchestrates the full pipeline: extract -> chunk -> Gemini -> spelling
-pass -> guardrail -> track-changes injection -> save.
+"""Orchestrates the full pipeline: extract -> chunk -> Gemini ->
+guardrail -> track-changes injection -> save.
 """
 
 from __future__ import annotations
@@ -16,7 +16,6 @@ import chunking
 import docx_extract as de
 import docx_track_changes as tc
 import gemini_client
-import spelling_check
 import style_guides
 from config import MAX_CHANGED_TOKEN_RATIO
 
@@ -95,8 +94,7 @@ def process_document(
         if not extraction.text or i not in corrected_by_id:
             continue
 
-        corrected_text = spelling_check.enforce_variant(corrected_by_id[i], variant)
-        corrected_text = _restore_edge_whitespace(extraction.text, corrected_text)
+        corrected_text = _restore_edge_whitespace(extraction.text, corrected_by_id[i])
         if corrected_text == extraction.text:
             continue
 
@@ -108,8 +106,9 @@ def process_document(
                 variant,
                 extra_instruction=GUARDRAIL_RETRY_INSTRUCTION,
             )
-            retried_text = spelling_check.enforce_variant(retry_result.get(i, corrected_text), variant)
-            retried_text = _restore_edge_whitespace(extraction.text, retried_text)
+            retried_text = _restore_edge_whitespace(
+                extraction.text, retry_result.get(i, corrected_text)
+            )
             retried_ratio = tc.changed_token_ratio(extraction, retried_text)
             if retried_ratio <= ratio:
                 corrected_text, ratio = retried_text, retried_ratio
