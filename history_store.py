@@ -83,6 +83,7 @@ def save_run(
             "edited_paragraphs": result.edited_paragraphs,
             "flagged_count": len(result.flagged_paragraphs),
             "flagged": [asdict(f) for f in result.flagged_paragraphs],
+            "failed_paragraphs": result.failed_paragraphs,
             "gcs_path": gcs_path,
         }
     )

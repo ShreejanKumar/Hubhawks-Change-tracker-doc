@@ -53,6 +53,7 @@ class ProcessResult:
     total_paragraphs: int
     edited_paragraphs: int
     flagged_paragraphs: list[FlaggedParagraph] = field(default_factory=list)
+    failed_paragraphs: list[int] = field(default_factory=list)
 
 
 ProgressCallback = Callable[[int, int], None]
@@ -78,8 +79,11 @@ def process_document(
     chunks = chunking.build_chunks(indexed)
 
     corrected_by_id: dict[int, str] = {}
+    failed_ids: set[int] = set()
     for chunk_num, chunk in enumerate(chunks):
-        corrected_by_id.update(gemini_client.correct_paragraphs(chunk, style_guide_text, variant))
+        chunk_result, chunk_failed = gemini_client.correct_paragraphs(chunk, style_guide_text, variant)
+        corrected_by_id.update(chunk_result)
+        failed_ids |= chunk_failed
         if progress_callback:
             progress_callback(chunk_num + 1, max(len(chunks), 1))
 
@@ -101,12 +105,13 @@ def process_document(
 
         ratio = tc.changed_token_ratio(extraction, corrected_text)
         if ratio > MAX_CHANGED_TOKEN_RATIO:
-            retry_result = gemini_client.correct_paragraphs(
+            retry_result, retry_failed = gemini_client.correct_paragraphs(
                 [chunking.IndexedParagraph(id=i, text=extraction.text)],
                 style_guide_text,
                 variant,
                 extra_instruction=GUARDRAIL_RETRY_INSTRUCTION,
             )
+            failed_ids |= retry_failed
             raw_retried_text = _restore_edge_whitespace(
                 extraction.text, retry_result.get(i, raw_corrected_text)
             )
@@ -133,4 +138,5 @@ def process_document(
         total_paragraphs=len(all_paragraphs),
         edited_paragraphs=edited_count,
         flagged_paragraphs=flagged,
+        failed_paragraphs=sorted(failed_ids),
     )

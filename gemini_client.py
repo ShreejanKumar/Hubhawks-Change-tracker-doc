@@ -5,6 +5,8 @@ id-validation retry/split fallback for unreliable chunk responses.
 from __future__ import annotations
 
 import json
+import logging
+import time
 
 import streamlit as st
 from google import genai
@@ -12,7 +14,18 @@ from google.genai import types
 from pydantic import BaseModel
 
 from chunking import IndexedParagraph, split_in_half
-from config import GEMINI_MODEL, GEMINI_SEED
+from config import (
+    GEMINI_MANUAL_RETRY_ATTEMPTS,
+    GEMINI_MODEL,
+    GEMINI_REQUEST_TIMEOUT_MS,
+    GEMINI_RETRY_ATTEMPTS,
+    GEMINI_RETRY_INITIAL_DELAY_S,
+    GEMINI_RETRY_MAX_DELAY_S,
+    GEMINI_SEED,
+    GEMINI_THINKING_BUDGET,
+)
+
+logger = logging.getLogger(__name__)
 
 
 class ParagraphCorrection(BaseModel):
@@ -131,9 +144,18 @@ def _call_gemini(
             system_instruction=system_instruction,
             response_mime_type="application/json",
             response_schema=list[ParagraphCorrection],
-            thinking_config=types.ThinkingConfig(thinking_budget=-1),
+            thinking_config=types.ThinkingConfig(thinking_budget=GEMINI_THINKING_BUDGET),
             temperature=0,
             seed=GEMINI_SEED,
+            http_options=types.HttpOptions(
+                timeout=GEMINI_REQUEST_TIMEOUT_MS,
+                retry_options=types.HttpRetryOptions(
+                    attempts=GEMINI_RETRY_ATTEMPTS,
+                    initial_delay=GEMINI_RETRY_INITIAL_DELAY_S,
+                    max_delay=GEMINI_RETRY_MAX_DELAY_S,
+                    http_status_codes=[429, 500, 502, 503, 504],
+                ),
+            ),
         ),
     )
 
@@ -141,35 +163,76 @@ def _call_gemini(
     return {c.id: c.corrected_text for c in corrections}
 
 
+def _call_gemini_with_retries(
+    paragraphs: list[IndexedParagraph],
+    style_guide_text: str,
+    variant: str,
+    extra_instruction: str,
+) -> dict[int, str]:
+    """_call_gemini's own http_options.retry_options only retries specific
+    HTTP status codes. A timeout or connection reset raises a different
+    exception and would otherwise get exactly one attempt before the whole
+    paragraph range falls through to the split/give-up logic below. Retry
+    those too, so a single transient blip doesn't need a full split-and-retry
+    detour (or, at the single-paragraph leaf, doesn't mean giving up outright)."""
+    for attempt in range(GEMINI_MANUAL_RETRY_ATTEMPTS):
+        try:
+            return _call_gemini(paragraphs, style_guide_text, variant, extra_instruction)
+        except Exception:
+            if attempt == GEMINI_MANUAL_RETRY_ATTEMPTS - 1:
+                raise
+            ids = {p.id for p in paragraphs}
+            logger.warning(
+                "Gemini call failed (attempt %d/%d) for paragraph ids %d-%d; retrying",
+                attempt + 1, GEMINI_MANUAL_RETRY_ATTEMPTS, min(ids), max(ids),
+                exc_info=True,
+            )
+            time.sleep(GEMINI_RETRY_INITIAL_DELAY_S * (attempt + 1))
+
+
 def correct_paragraphs(
     paragraphs: list[IndexedParagraph],
     style_guide_text: str,
     variant: str,
     extra_instruction: str = "",
-) -> dict[int, str]:
+) -> tuple[dict[int, str], set[int]]:
     """Correct a list of paragraphs via Gemini, validating the response's
     id-set matches exactly what was sent. On any mismatch or error,
     recursively halves the chunk and retries, down to per-paragraph calls.
     A paragraph that still fails alone falls back to its original text
-    unchanged, rather than being silently dropped.
+    unchanged rather than being silently dropped, but its id is reported in
+    the second return value so callers can tell "left unchanged because
+    nothing needed fixing" apart from "left unchanged because Gemini never
+    returned a usable correction" — the two look identical in the output
+    docx otherwise.
     """
     if not paragraphs:
-        return {}
+        return {}, set()
 
     expected_ids = {p.id for p in paragraphs}
     try:
-        result = _call_gemini(paragraphs, style_guide_text, variant, extra_instruction)
+        result = _call_gemini_with_retries(paragraphs, style_guide_text, variant, extra_instruction)
     except Exception:
+        logger.exception(
+            "Gemini call failed for paragraph ids %d-%d (%d paragraphs)",
+            min(expected_ids), max(expected_ids), len(paragraphs),
+        )
         result = {}
 
     if set(result.keys()) == expected_ids:
-        return result
+        return result, set()
 
     if len(paragraphs) == 1:
-        return {paragraphs[0].id: paragraphs[0].text}
+        pid = paragraphs[0].id
+        logger.error("Giving up on paragraph %d after exhausting retries; left unchanged", pid)
+        return {pid: paragraphs[0].text}, {pid}
 
     left, right = split_in_half(paragraphs)
     merged: dict[int, str] = {}
-    merged.update(correct_paragraphs(left, style_guide_text, variant, extra_instruction))
-    merged.update(correct_paragraphs(right, style_guide_text, variant, extra_instruction))
-    return merged
+    failed: set[int] = set()
+    left_result, left_failed = correct_paragraphs(left, style_guide_text, variant, extra_instruction)
+    right_result, right_failed = correct_paragraphs(right, style_guide_text, variant, extra_instruction)
+    merged.update(left_result)
+    merged.update(right_result)
+    failed |= left_failed | right_failed
+    return merged, failed

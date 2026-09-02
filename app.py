@@ -26,6 +26,17 @@ if "selected_run_id" not in st.session_state:
     st.session_state["selected_run_id"] = None
 
 
+def render_failure_notice(failed_paragraphs, total_paragraphs) -> None:
+    if not failed_paragraphs:
+        return
+    st.error(
+        f"{len(failed_paragraphs)} of {total_paragraphs} paragraph(s) could not be "
+        "checked at all — Gemini never returned a usable correction for them (API "
+        "error, rate limit, or timeout) and they were left completely unreviewed, "
+        "not just \"no changes needed\". Re-run the document to retry them."
+    )
+
+
 def render_flagged(flagged_list) -> None:
     with st.expander(
         f"{len(flagged_list)} paragraph(s) flagged for review "
@@ -109,6 +120,7 @@ if selected_run_id:
             f"{run['edited_paragraphs']} of {run['total_paragraphs']} paragraphs "
             "received tracked changes."
         )
+        render_failure_notice(run.get("failed_paragraphs") or [], run["total_paragraphs"])
 
         if run.get("flagged"):
             render_flagged(run["flagged"])
@@ -184,6 +196,7 @@ else:
             f"Done. {result.edited_paragraphs} of {result.total_paragraphs} "
             f"paragraphs received tracked changes."
         )
+        render_failure_notice(result.failed_paragraphs, result.total_paragraphs)
 
         if result.flagged_paragraphs:
             render_flagged(result.flagged_paragraphs)
