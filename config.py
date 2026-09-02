@@ -1,5 +1,11 @@
 GEMINI_MODEL = "gemini-2.5-flash"
 
+# Fixed so repeated runs on the same document produce the same edits (best
+# effort — combined with temperature=0, this is the standard lever Gemini
+# exposes for run-to-run reproducibility, though it isn't an absolute
+# guarantee per Google's own docs).
+GEMINI_SEED = 42
+
 # Chunking
 INPUT_BUDGET_TOKENS_PER_CHUNK = 30000
 MAX_PARAGRAPHS_PER_CHUNK = 150

@@ -12,7 +12,7 @@ from google.genai import types
 from pydantic import BaseModel
 
 from chunking import IndexedParagraph, split_in_half
-from config import GEMINI_MODEL
+from config import GEMINI_MODEL, GEMINI_SEED
 
 
 class ParagraphCorrection(BaseModel):
@@ -66,10 +66,27 @@ reading more than one word at a time:
 - The {variant} English convention applied consistently and correctly to
   every word, including less common vocabulary — but only to words that are
   genuinely spelling variants of each other in the sense used; never change
-  a word into a different word that happens to be spelled similarly.
+  a word into a different word that happens to be spelled similarly. Do NOT
+  default to the generic textbook rule for {variant} English (for example,
+  assuming British English always takes "-ise" endings) if the STYLE GUIDE
+  below specifies a different convention — the style guide's spelling rules
+  (e.g. "-ize" vs "-ise", "-yse" vs "-yze", and any listed exceptions) are
+  authoritative for {variant} English and must be followed exactly, even
+  where they diverge from the everyday convention for that variant.
 
 Apply the style guide below wherever it is relevant (numbers, capitalization,
-punctuation, abbreviations, italics conventions, etc.).
+punctuation, abbreviations, italics conventions, spelling conventions, etc.).
+
+You are returning plain text, which has no way to represent italics directly.
+Where the style guide requires italics (for example the title of a book,
+poem, film, album, or similar complete work) and the text you were given is
+not already marked, indicate it by wrapping ONLY that exact span in a single
+pair of asterisks, e.g. *In Memoriam A.H.H.* — the system converts this
+marker into real italic formatting and removes the asterisks themselves, so
+they must never remain as literal characters in your output. Reserve
+asterisks exclusively for this purpose: never use them for bold, emphasis,
+or any other markdown, never nest a pair inside another, and never leave one
+unmatched.
 
 STYLE GUIDE:
 {style_guide}
@@ -116,6 +133,7 @@ def _call_gemini(
             response_schema=list[ParagraphCorrection],
             thinking_config=types.ThinkingConfig(thinking_budget=-1),
             temperature=0,
+            seed=GEMINI_SEED,
         ),
     )
 

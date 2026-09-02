@@ -35,11 +35,17 @@ from typing import Iterator
 
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
+from docx.text.font import Font
 from docx.text.paragraph import Paragraph
 
 from docx_extract import ANCHOR, HYPERLINK, PROTECTED_CHAR, TEXT, Item, ParagraphExtraction
 
 _TOKEN_RE = re.compile(r"\s+|\w+|[^\w\s]")
+
+# Gemini has no way to express italics in a plain-text field, so it marks a
+# span that needs italic formatting (e.g. a book/poem title) by wrapping it
+# in a single pair of asterisks. See strip_italic_markers().
+_ITALIC_MARKER_RE = re.compile(r"\*([^*\n]+)\*")
 
 
 def make_id_counter(document) -> Iterator[int]:
@@ -48,7 +54,7 @@ def make_id_counter(document) -> Iterator[int]:
     contain revisions)."""
     max_id = 0
     for el in document.element.body.iter():
-        if el.tag in (qn("w:ins"), qn("w:del")):
+        if el.tag in (qn("w:ins"), qn("w:del"), qn("w:rPrChange")):
             raw = el.get(qn("w:id"))
             if raw is not None:
                 try:
@@ -56,6 +62,67 @@ def make_id_counter(document) -> Iterator[int]:
                 except ValueError:
                     pass
     return count(max_id + 1)
+
+
+def strip_italic_markers(text: str) -> tuple[str, list[tuple[int, int]]]:
+    """Remove Gemini's asterisk italic markers from `text` and return the
+    clean text plus the character ranges (offsets into the clean text) that
+    should be rendered in italics. Keeps the asterisks themselves from ever
+    reaching the document as literal characters."""
+    if "*" not in text:
+        return text, []
+
+    clean_parts: list[str] = []
+    spans: list[tuple[int, int]] = []
+    pos = 0
+    out_len = 0
+    for m in _ITALIC_MARKER_RE.finditer(text):
+        clean_parts.append(text[pos:m.start()])
+        out_len += m.start() - pos
+        inner = m.group(1)
+        clean_parts.append(inner)
+        spans.append((out_len, out_len + len(inner)))
+        out_len += len(inner)
+        pos = m.end()
+    clean_parts.append(text[pos:])
+    return "".join(clean_parts), spans
+
+
+def _split_italic_segments(
+    text: str, offset: int, italic_spans: list[tuple[int, int]]
+) -> list[tuple[str, bool]]:
+    """Split `text`, which occupies [offset, offset + len(text)) in the final
+    corrected text, into (segment, is_italic) pieces per italic_spans."""
+    if not italic_spans:
+        return [(text, False)]
+
+    segments: list[tuple[str, bool]] = []
+    pos = 0
+    n = len(text)
+    for start, end in italic_spans:
+        s = max(start - offset, pos)
+        e = min(end - offset, n)
+        if s >= e:
+            continue
+        if s > pos:
+            segments.append((text[pos:s], False))
+        segments.append((text[s:e], True))
+        pos = e
+        if pos >= n:
+            break
+    if pos < n:
+        segments.append((text[pos:], False))
+    return segments or [(text, False)]
+
+
+def _rpr_has_italic(rpr) -> bool:
+    if rpr is None:
+        return False
+    i = rpr.find(qn("w:i"))
+    if i is None:
+        return False
+    val = i.get(qn("w:val"))
+    return val not in ("0", "false", "off")
 
 
 def _tokenize(text: str) -> list[str]:
@@ -136,7 +203,7 @@ def _group_anchors(items: list[Item]) -> dict[int, list[Item]]:
     return grouped
 
 
-def _make_run(text: str, rpr) -> object:
+def _make_run(text: str, rpr, italic: bool = False) -> object:
     r = OxmlElement("w:r")
     if rpr is not None:
         r.append(copy.deepcopy(rpr))
@@ -144,6 +211,36 @@ def _make_run(text: str, rpr) -> object:
     t.set(qn("xml:space"), "preserve")
     t.text = text
     r.append(t)
+    if italic:
+        Font(r, None).italic = True
+    return r
+
+
+def _make_run_with_tracked_italic(text: str, rpr, id_: int, author: str, date: str) -> object:
+    """A run whose text is unchanged but italics were just added to it,
+    tracked via w:rPrChange (Word's mechanism for a reviewable run-property
+    change) rather than wrapped in w:ins, since the text content itself
+    isn't an insertion."""
+    r = OxmlElement("w:r")
+    new_rpr = copy.deepcopy(rpr) if rpr is not None else OxmlElement("w:rPr")
+    r.append(new_rpr)
+
+    t = OxmlElement("w:t")
+    t.set(qn("xml:space"), "preserve")
+    t.text = text
+    r.append(t)
+
+    Font(r, None).italic = True  # inserts <w:i/> at its schema-ordered slot
+
+    change = OxmlElement("w:rPrChange")
+    change.set(qn("w:id"), str(id_))
+    change.set(qn("w:author"), author)
+    change.set(qn("w:date"), date)
+    # w:rPrChange requires exactly one w:rPr child recording the prior
+    # properties (schema minOccurs=1), even when there were none.
+    change.append(copy.deepcopy(rpr) if rpr is not None else OxmlElement("w:rPr"))
+    new_rpr.append(change)  # w:rPrChange must be the last child of w:rPr
+
     return r
 
 
@@ -204,6 +301,7 @@ def build_new_children(
     author: str,
     date: str,
     id_gen: Iterator[int],
+    italic_spans: list[tuple[int, int]] = (),
 ) -> list[object]:
     opcodes = _char_opcodes(extraction.text, corrected_text)
     opcodes = _suppress_respacing_opcodes(opcodes, extraction.text, corrected_text)
@@ -227,11 +325,15 @@ def build_new_children(
 
         if tag == "insert":
             text = corrected_text[b1:b2]
-            new_children.append(_wrap_revision("w:ins", next(id_gen), author, date, _make_run(text, last_rpr)))
+            for seg_text, seg_italic in _split_italic_segments(text, b1, italic_spans):
+                new_children.append(
+                    _wrap_revision("w:ins", next(id_gen), author, date, _make_run(seg_text, last_rpr, seg_italic))
+                )
             continue
 
         sub_items = _items_overlapping(extraction.items, a1, a2)
         first_text_rpr = next((it.rpr for it in sub_items if it.kind != HYPERLINK), last_rpr)
+        shift = b1 - a1  # constant offset from original- to corrected-text coordinates within this opcode
 
         for it in sub_items:
             emit_anchors_at(it.start)
@@ -250,7 +352,13 @@ def build_new_children(
                 if it.kind == PROTECTED_CHAR:
                     new_children.append(_make_protected_char_run(it))
                 else:
-                    new_children.append(_make_run(piece_text, it.rpr))
+                    for seg_text, seg_italic in _split_italic_segments(piece_text, s + shift, italic_spans):
+                        if seg_italic and not _rpr_has_italic(it.rpr):
+                            new_children.append(
+                                _make_run_with_tracked_italic(seg_text, it.rpr, next(id_gen), author, date)
+                            )
+                        else:
+                            new_children.append(_make_run(seg_text, it.rpr))
             else:  # 'delete' or 'replace': original-side content is deleted
                 new_children.append(
                     _wrap_revision("w:del", next(id_gen), author, date, _make_del_run(piece_text, it.rpr))
@@ -259,9 +367,12 @@ def build_new_children(
 
         if tag == "replace":
             text = corrected_text[b1:b2]
-            new_children.append(
-                _wrap_revision("w:ins", next(id_gen), author, date, _make_run(text, first_text_rpr))
-            )
+            for seg_text, seg_italic in _split_italic_segments(text, b1, italic_spans):
+                new_children.append(
+                    _wrap_revision(
+                        "w:ins", next(id_gen), author, date, _make_run(seg_text, first_text_rpr, seg_italic)
+                    )
+                )
             last_rpr = first_text_rpr
 
     emit_anchors_at(len(extraction.text))
@@ -275,15 +386,17 @@ def apply_track_changes(
     author: str,
     date: str,
     id_gen: Iterator[int],
+    italic_spans: list[tuple[int, int]] = (),
 ) -> None:
     """Rebuild `paragraph` in place so the diff between extraction.text and
     corrected_text is expressed as tracked changes. No-op if the paragraph
-    had no editable content or the text is unchanged.
+    had no editable content, or the text is unchanged and there are no
+    italic-only formatting changes to apply either.
     """
-    if extraction.text == corrected_text or not extraction.items:
+    if (extraction.text == corrected_text and not italic_spans) or not extraction.items:
         return
 
-    new_children = build_new_children(extraction, corrected_text, author, date, id_gen)
+    new_children = build_new_children(extraction, corrected_text, author, date, id_gen, italic_spans)
 
     original_elements = _distinct_original_elements(extraction.items)
     if not original_elements:

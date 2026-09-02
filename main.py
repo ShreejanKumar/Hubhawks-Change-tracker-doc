@@ -94,8 +94,9 @@ def process_document(
         if not extraction.text or i not in corrected_by_id:
             continue
 
-        corrected_text = _restore_edge_whitespace(extraction.text, corrected_by_id[i])
-        if corrected_text == extraction.text:
+        raw_corrected_text = _restore_edge_whitespace(extraction.text, corrected_by_id[i])
+        corrected_text, italic_spans = tc.strip_italic_markers(raw_corrected_text)
+        if corrected_text == extraction.text and not italic_spans:
             continue
 
         ratio = tc.changed_token_ratio(extraction, corrected_text)
@@ -106,19 +107,22 @@ def process_document(
                 variant,
                 extra_instruction=GUARDRAIL_RETRY_INSTRUCTION,
             )
-            retried_text = _restore_edge_whitespace(
-                extraction.text, retry_result.get(i, corrected_text)
+            raw_retried_text = _restore_edge_whitespace(
+                extraction.text, retry_result.get(i, raw_corrected_text)
             )
+            retried_text, retried_spans = tc.strip_italic_markers(raw_retried_text)
             retried_ratio = tc.changed_token_ratio(extraction, retried_text)
             if retried_ratio <= ratio:
-                corrected_text, ratio = retried_text, retried_ratio
+                corrected_text, ratio, italic_spans = retried_text, retried_ratio, retried_spans
             if ratio > MAX_CHANGED_TOKEN_RATIO:
                 flagged.append(FlaggedParagraph(i, extraction.text, corrected_text, ratio))
 
-        if corrected_text == extraction.text:
+        if corrected_text == extraction.text and not italic_spans:
             continue
 
-        tc.apply_track_changes(paragraph, extraction, corrected_text, author, revision_date, id_gen)
+        tc.apply_track_changes(
+            paragraph, extraction, corrected_text, author, revision_date, id_gen, italic_spans
+        )
         edited_count += 1
 
     out_stream = io.BytesIO()
