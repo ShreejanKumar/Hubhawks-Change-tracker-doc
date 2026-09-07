@@ -5,6 +5,7 @@ guardrail -> track-changes injection -> save.
 from __future__ import annotations
 
 import io
+import logging
 import re
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -18,6 +19,8 @@ import docx_track_changes as tc
 import gemini_client
 import style_guides
 from config import MAX_CHANGED_TOKEN_RATIO
+
+logger = logging.getLogger(__name__)
 
 GUARDRAIL_RETRY_INSTRUCTION = (
     "Your previous correction changed too much text. Make ONLY essential "
@@ -98,37 +101,48 @@ def process_document(
         if not extraction.text or i not in corrected_by_id:
             continue
 
-        raw_corrected_text = _restore_edge_whitespace(extraction.text, corrected_by_id[i])
-        corrected_text, italic_spans = tc.strip_italic_markers(raw_corrected_text)
-        if corrected_text == extraction.text and not italic_spans:
-            continue
+        try:
+            raw_corrected_text = _restore_edge_whitespace(
+                extraction.text, tc.sanitize_for_xml(corrected_by_id[i])
+            )
+            corrected_text, italic_spans = tc.strip_italic_markers(raw_corrected_text)
+            if corrected_text == extraction.text and not italic_spans:
+                continue
 
-        ratio = tc.changed_token_ratio(extraction, corrected_text)
-        if ratio > MAX_CHANGED_TOKEN_RATIO:
-            retry_result, retry_failed = gemini_client.correct_paragraphs(
-                [chunking.IndexedParagraph(id=i, text=extraction.text)],
-                style_guide_text,
-                variant,
-                extra_instruction=GUARDRAIL_RETRY_INSTRUCTION,
-            )
-            failed_ids |= retry_failed
-            raw_retried_text = _restore_edge_whitespace(
-                extraction.text, retry_result.get(i, raw_corrected_text)
-            )
-            retried_text, retried_spans = tc.strip_italic_markers(raw_retried_text)
-            retried_ratio = tc.changed_token_ratio(extraction, retried_text)
-            if retried_ratio <= ratio:
-                corrected_text, ratio, italic_spans = retried_text, retried_ratio, retried_spans
+            ratio = tc.changed_token_ratio(extraction, corrected_text)
             if ratio > MAX_CHANGED_TOKEN_RATIO:
-                flagged.append(FlaggedParagraph(i, extraction.text, corrected_text, ratio))
+                retry_result, retry_failed = gemini_client.correct_paragraphs(
+                    [chunking.IndexedParagraph(id=i, text=extraction.text)],
+                    style_guide_text,
+                    variant,
+                    extra_instruction=GUARDRAIL_RETRY_INSTRUCTION,
+                )
+                failed_ids |= retry_failed
+                raw_retried_text = _restore_edge_whitespace(
+                    extraction.text,
+                    tc.sanitize_for_xml(retry_result.get(i, raw_corrected_text)),
+                )
+                retried_text, retried_spans = tc.strip_italic_markers(raw_retried_text)
+                retried_ratio = tc.changed_token_ratio(extraction, retried_text)
+                if retried_ratio <= ratio:
+                    corrected_text, ratio, italic_spans = retried_text, retried_ratio, retried_spans
+                if ratio > MAX_CHANGED_TOKEN_RATIO:
+                    flagged.append(FlaggedParagraph(i, extraction.text, corrected_text, ratio))
 
-        if corrected_text == extraction.text and not italic_spans:
-            continue
+            if corrected_text == extraction.text and not italic_spans:
+                continue
 
-        tc.apply_track_changes(
-            paragraph, extraction, corrected_text, author, revision_date, id_gen, italic_spans
-        )
-        edited_count += 1
+            tc.apply_track_changes(
+                paragraph, extraction, corrected_text, author, revision_date, id_gen, italic_spans
+            )
+            edited_count += 1
+        except Exception:
+            # A single paragraph's corrected text failing to apply (e.g. an
+            # unexpected XML-incompatible edge case) must never take down the
+            # whole run and lose every other paragraph's already-fetched
+            # corrections — isolate it as a failure and keep going.
+            logger.exception("Failed to apply track changes to paragraph %d; left unchanged", i)
+            failed_ids.add(i)
 
     out_stream = io.BytesIO()
     document.save(out_stream)

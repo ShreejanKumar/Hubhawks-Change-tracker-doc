@@ -1,4 +1,4 @@
-GEMINI_MODEL = "gemini-2.5-flash"
+GEMINI_MODEL = "gemini-3.6-flash"
 
 # Fixed so repeated runs on the same document produce the same edits (best
 # effort — combined with temperature=0, this is the standard lever Gemini

@@ -42,6 +42,24 @@ from docx_extract import ANCHOR, HYPERLINK, PROTECTED_CHAR, TEXT, Item, Paragrap
 
 _TOKEN_RE = re.compile(r"\s+|\w+|[^\w\s]")
 
+# XML 1.0 forbids most C0/C1 control characters in text content (NULL bytes
+# included) -- lxml raises ValueError the moment one is assigned to a w:t.
+# Word itself never produces these, but a model's corrected_text occasionally
+# does (e.g. a stray control character slipping out of a JSON response), and
+# it's invisible/meaningless content either way, so dropping it is safe.
+_XML_VALID_RANGES = (
+    "\x09\x0a\x0d"
+    "\x20-\uD7FF"
+    "\uE000-\uFFFD"
+    "\U00010000-\U0010FFFF"
+)
+_INVALID_XML_CHAR_RE = re.compile(f"[^{_XML_VALID_RANGES}]")
+
+
+def sanitize_for_xml(text: str) -> str:
+    return _INVALID_XML_CHAR_RE.sub("", text)
+
+
 # Gemini has no way to express italics in a plain-text field, so it marks a
 # span that needs italic formatting (e.g. a book/poem title) by wrapping it
 # in a single pair of asterisks. See strip_italic_markers().
