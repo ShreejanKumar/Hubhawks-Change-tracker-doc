@@ -1,19 +1,12 @@
-Note: please key in your updates in red.
 PENGUIN RANDOM HOUSE INDIA STYLE GUIDE
 Additional style guide elements to keep in mind:
-• jugdment without e for cases
-• judgement with e for other instances
 • Adjectives positioning
-• Opinion or quality of noun> size>age> shape>color>origin or material>a
+• Opinion or quality of noun> size>age> shape>colour>origin or material>a
 qualifier. But before stating adjectives of quality the adjectives of quantity
 or numeral adjectives must be there. All these are used as per the
 availability and need of the description of a noun in a sentence.
 • Adjectives arrangement:
 • opinion-size-age-shape-colour-origin-material-purpose noun
-• him and me
-• he and I
-• us and me
-• we and I
 • Citing Penguin in footnotes:
 - Pre-2013 (merger): Penguin Books India, New Delhi
 - 2014 onwards: PRHI, Gurgaon
@@ -25,14 +18,11 @@ The be capitalized and italicized
 
 • Indian Subcontinent (7 countries): India, Pakistan, Bangladesh, Sri Lanka,
 Nepal, Bhutan and the Maldives.
-• To find acronyms in Word: <[A-Z]{2,}> (in Wildcard mode)
-• To find straight apostrophes in Word, you’d type: ^39
-• You use ^34 to find straight double quotes
 • Italics (of vernacular, local words and those not found in the OED) on the
 first appearance only
 • Food items, names of trees etc. are not italicized
-• How songs are treated: ‘The Continental’, ‘Night and Day’, ‘Norwegian
-Wood’
+• How songs are treated: in quote marks (not italics), matching whichever
+quote style applies under the manuscript's selected English convention
 • NUMBER RANGES ARE DENOTED BY EN DASHES, NOT
 HYPHENS
 Guide to capitalizing headlines:
@@ -51,38 +41,16 @@ GLOBALS:
 Check for double spaces, double quotes, space before a comma, space before a
 full stop, space before a quotation mark, spaces before en dash, em dash and
 hyphens
-Check for British spellings; look out for:
-- ise (lise, nise, tise, sise, vise, mise, gise, rise, dise)
-- isa (lisa, nisa, tisa, misa, risa)
-- isi (tisi, gisi, nisi, sisi, misi, visi, risi)
-- thise (sympathize)
-- yse, yze
-- or (lor, vor, bor, nor)
-- our, tt, ll, tre, ter, nce, nse, tice, tise, cuss
-- Space before every footnote begins
-- Dots between initials
-- 2016 —
-- Period dots before FNs
-- zero to
-- numbers
-
-- sub-
-- lakh not lakhs
-- crore not crores
-Curly quotes not copy-pasted ones (')
-For example, to find straight apostrophes in Word, you'd type: ^39
-You use ^34 to find straight double quotes.
+Space before every footnote begins
+Dots between initials
+Period dots before FNs
+lakh not lakhs
+crore not crores
+Curly quotes, not straight/copy-pasted ones
 Check ellipsis (there should be one space between each dot)
 Check double dots
-Check double quotes (we only use single quotes to begin with, and double
-quotes for a quote within a quote)
 per cent, NOT % or percent
 Mr, Mrs, Ms, Dr, the Internet, YouTube, WhatsApp: correct spellings
-… . . .
-.’
-
-.”
--
 Abbreviations
 • An abbreviation that is a contraction, i.e. that retains its first and last letters,
 should appear without a stop, e.g. Mr, Ms, Mrs, Dr, St (for street and Saint).
@@ -234,10 +202,9 @@ used to indicate breaks in speech or argument.
 • For parentheses, a single bracket ( ) should be used. For parenthesis within
 parenthesis, square brackets [ ] should be used.
 Quotes
-• The Penguin style for quotations is to use single quote (‘ ’) marks.
+The Penguin style for quotations is to use single quote (‘ ’) marks.
 • For quotes within quotes, double quote marks (“ ”) are to be used.
-• For quotes within quotes within quotes, single quote marks are to be used
-again.
+• For quotes within quotes within quotes, single quote marks are to be used again.
 • Where a complete sentence is quoted, the closing quote mark should come
 after the stop (.’). Where a phrase or a section of a sentence is quoted, the
 closing quote mark should come before the stop (’.).
@@ -260,33 +227,11 @@ specifically demands it.
 • The hour and minutes in ‘6.45 p.m.’ should be separated by a stop and not a
 colon.
 SPELLING AND CORRECT USAGE
-Ground Rules of Spelling
-• ‘z’ rather than ‘s’ and ‘-ize’ rather than ‘-ise’. Thus, ‘organization’ not
-‘organisation’; ‘standardize’ not ‘standardise’.
-However, the following words must be spelt -ise, not -ize:
-advertise franchise
-apprise merchandise
-braise premise
-chastise prise
-circumcise reprise
-comprise revise
-despise supervise
-
-devise surmise
-enterprise surprise
-exercise televise
-• Also, analyse, catalyse, paralyse etc. should be spelt -yse, not -yze.
-• British rather than American spellings.
-• Thus, -ae- rather than -e- in anaemia, archaeology etc.
--ce rather than -se in defence, offence, pretence etc.
-em- and en- rather than im- and in- in embed, enclose etc.
--l- rather than -ll- in fulfil, instalment, skilful, wilful etc.
--ll- rather than -l- in marvellous, woollen etc.
--lled and -ller rather than -led and -ler in travelled, traveller etc.
--ou- rather than -o- in mould, honour, labour etc.
--oue- rather than -eu- in manoeuvre etc.
--que- rather than -ck- in cheque, chequered etc.
--re rather then -er in calibre, centre, litre, kilometre, sombre, theatre etc.
+Note: which spelling variant to use (e.g. '-ize' vs '-ise', '-yse' vs
+'-yze', 'anaemia' vs 'anemia', 'defence' vs 'defense', 'fulfil' vs
+'fulfill', 'centre' vs 'center', etc.) is a grammar matter decided by the
+manuscript's selected English convention (British or American), not by
+this style guide.
 Troublesome Words
 Affect/Effect Affect means to act upon or influence. To
 effect is to produce or accomplish.

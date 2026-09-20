@@ -1,116 +1,8 @@
-copyright@vinibhati
-EDITORIAL WORKSHOP - SESSION 1
-LEVELS OF EDITING
-❖
-Developmental Editing
-❖
-Copyediting
-➢
-Line-editing
-➢
-Fact-checking
-❖
-Proofreading
-❖
-Spot-Checking
-❖
-Beta-reading
-● Developmental Editing/ Substantive Editing
-Involves detailed feedback and collaboration with the author on macro level
-issues in the manuscript. Focus on big-picture factors like plot coherence,
-compelling character arcs, powerful climax, chapter wise transitions and
-thematic considerations.
-● Factors to keep in mind during developmental editing
-○ What is the thematic statement of the story?
-■ Thematic statement the “central” or “controlling story
-idea,” the idea that guides you in writing your entire novel.
-It shapes the strategic choices you make as you write.
-■ If used skillfully, a thematic statement will make the story
-feel deeper, and touch readers on an emotional level. It may
-even change how they view the world and how they behave.
-○ Are the characters and settings complementing the genre of the
-book?
-○ Are the sequence of events in the story logically coherent?
-○ Does the actions of the characters align with their personality?
-○ Is the conflict and resolution compelling enough?
-○ Does the story have a balance of description and character
-conversations?
-○ Are the transitions between chapters and scenes smooth or
-abrupt?
-● Copy-editing and Line editing
-
-copyright@vinibhati
-Involves a closer look at the manuscript to ensure that the writing is more
-engaging and reader-friendly. We need to improve the clarity, coherency,
-consistency, and correctness of the language and address word-repetition.
-Broadly, we need to engage with the technicalities here and fix mechanical
-issues.
-Fact-Checking is an intrinsic part of copy-editing. Since the editor is working
-on a simpler software, it is easier to rectify factual errors. For fiction, fact-
-checking will involve checking word usage and their meanings, idioms and
-spellings.
-● Factors to keep in mind while copy-editing
-○ Spellings and typos
-○ Grammatical inconsistencies
-○ Capitalization issues.
-○ Avoid repetition of words
-○ Usage of numbers or numerals
-○ Tense inconsistencies
-○ Character names inconsistencies
-● Proofreading
-In this stage, the editor needs to take the reader’s perspective in mind. The
-editor will primarily be working on the designed file so you should keep an eye
-out on stylistic issues which can visually enhance the reading experience.
-● Factors to keep in mind while proofreading:
-○ Inconsistencies in layout and typography;
-○ Punctuation errors and the overuse of commas and semicolon
-○ Confusing page and word breaks;
-○ Incorrect captioning on any illustrations and page numbers in the
-contents.
-○ Spacing issues between words and lines
-○ Bold and Italics convention
-■ Anything that looks visually awkward needs to be flagged.
-○ Lingering typos and technical errors.
-● Coordination with the typesetter
-○ A proofreader is supposed to communicate with the typesetter as
-you will be editing the designed layout. A typesetter designs the
-
-copyright@vinibhati
-book so he/she is majorly technical in their approach. The
-instructions have to be short, clear and crisp. It should be phrased
-as a command and not as a suggestion.
-■ Incorrect Instruction: The word can be in italics
-■ Correct Instruction: Change the word in italics
-● TOOLS IN ADOBE PDF
-● Spot-Checking
-○ To be Conducted by Chief Editor/ Editor in Chief
-● Beta-reading
-○ The manuscript is shared with our target audience a.k.a a potential
-reader.
-THE THREE C’s- MANTRA OF EFFECTIVE EDITING
-❖
-CONSISTENCY
-➢
-The tone, character spellings, bold/italics formatting, spelling
-convention (US/UK English usage) have to be consistent everywhere.
-❖
-CONCISE WRITING
-➢
-Avoid long-winding and convoluted construction. Make the writing
-simple and elegant.
-❖
-CLARITY OF MEANING
-➢
-Weed out phrases and sentences which are vague and do not add
-anything to the plot or character evolution.
-
-copyright@vinibhati
 EDITING STYLESHEET
 ● ORTHOGRAPHY
-○ Ideally follow British orthography, albeit with ‘z’ in words like civilize,
-organize, etc. But if you are following American orthography in some
-cases, that works too. Keep the orthography consistent throughout the
-book.
+○ Which spelling variant to use is a grammar matter decided by the
+manuscript's selected English convention (British or American), not by
+this style guide. Keep it fully consistent throughout the book.
 ● NUMBER:
 ○ From one to hundred, these should be in words, and thereafter in
 numerals.
@@ -137,7 +29,6 @@ Partition; but not when used as a verb, as in the partition of India. Likewise
 with ‘independence’.
 ● The Second World War, First World War, etc., would be capitalised.
 
-copyright@vinibhati
 ● a.m. (ante meridiem), p.m. (post meridiem), should be in lower case, except in
 lines of capitals or small capitals.
 ● Acronyms should always be explained in brackets in the first instance, as in All
@@ -164,7 +55,6 @@ be italicised.
 ● Names of specific ships, aircrafts, etc., are italicised, but not abbreviations
 preceding them, e.g. HMS Mayflower.
 
-copyright@vinibhati
 CONNECTING PHRASES
 ● In works of fiction, keep the use of conjunctions like ‘and’, ‘but’, ‘thus’, ‘hence’,
 ‘since’, etc., to the minimum. Wherever possible, make the sentence complete
@@ -176,6 +66,12 @@ coordinate and work out a style with the author.
 ○ Be assured, then, that order, frugality, and economy are the necessary
 supporters of every personal and private virtue.
 DIALOGUE WRITING PUNCTUATION RULES
+The examples below illustrate comma/period placement and capitalization
+mechanics only — some happen to use single quote marks and some double,
+but which quote-mark family to actually use is a grammar matter decided
+by the manuscript's selected English convention, not by this style guide;
+apply whichever family that convention calls for rather than copying the
+example's own quote marks literally.
 I
 ● Comma before the opening quotation mark.
 ● Capital letter to indicate the beginning of a sentence inside the opening
@@ -197,7 +93,6 @@ need not be preceded or followed by a comma.
 ○ “I knew you won’t be able to make it.” He smirked/ smiled/ laughed/
 clicked his fingers/ turned around/ cheered.
 
-copyright@vinibhati
 IV
 ● If a character is quoting someone else in their speech, you need to place this
 within quote marks as well. But to prevent confusion, you should use the
@@ -228,7 +123,6 @@ character finally finishes speaking.
 explained. ‘When I was a child, I spent weekends on my grandparents’
 farm. But all they had were miniature ponies. And they told me that all
 
-copyright@vinibhati
 horses were the same size. They said the ones I saw on television looked
 bigger because they hired tiny actors to ride them. And I believed it.
 ‘Or, I did until I was eighteen, anyway. That’s when I met Clayton
@@ -258,7 +152,6 @@ normally require the next word to be capitalized, such as an exclamation
 point or question mark. But unless the sentence is truly over, use a
 lowercase letter to follow this punctuation.
 
-copyright@vinibhati
 ○ Example: "He's here! He's here!" she screamed.
 "Would you like to answer the door?" she asked.
 "What do you mean," he said to Jenna, "by asking me to dinner?"

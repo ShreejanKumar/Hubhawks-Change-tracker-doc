@@ -79,16 +79,35 @@ reading more than one word at a time:
 - The {variant} English convention applied consistently and correctly to
   every word, including less common vocabulary — but only to words that are
   genuinely spelling variants of each other in the sense used; never change
-  a word into a different word that happens to be spelled similarly. Do NOT
-  default to the generic textbook rule for {variant} English (for example,
-  assuming British English always takes "-ise" endings) if the STYLE GUIDE
-  below specifies a different convention — the style guide's spelling rules
-  (e.g. "-ize" vs "-ise", "-yse" vs "-yze", and any listed exceptions) are
-  authoritative for {variant} English and must be followed exactly, even
-  where they diverge from the everyday convention for that variant.
+  a word into a different word that happens to be spelled similarly.
+- Quote-mark family and the placement of terminal punctuation against the
+  closing quote mark, per the {variant} English convention: under British
+  English, primary quotations use single quote marks (‘ ’), a quote within
+  a quote uses double quote marks (“ ”), and a period or comma at the end
+  of a fully quoted sentence goes after the closing quote mark while one
+  ending a quoted phrase goes before it. Under American English, primary
+  quotations use double quote marks (“ ”), a quote within a quote uses
+  single quote marks (‘ ’), and a period or comma always goes before the
+  closing quote mark regardless of whether it is part of the quoted
+  material.
+- Irregular verbs that take a different preterite/past-participle form
+  between the two variants: under British English, prefer the traditional
+  "-t" form (e.g. dreamt, learnt, burnt, spelt, spilt, leapt, smelt, knelt)
+  rather than the "-ed" form; under American English, use the standard
+  "-ed" form instead (dreamed, learned, burned, spelled, spilled, leaped,
+  smelled, kneeled).
 
-Apply the style guide below wherever it is relevant (numbers, capitalization,
-punctuation, abbreviations, italics conventions, spelling conventions, etc.).
+For all of the above — spelling variant, quote-mark family and placement,
+and preterite verb forms — {variant} English as instructed here is
+authoritative and must be followed regardless of anything the STYLE GUIDE
+below says or implies about language convention (for example a stated
+preference for "British spellings" or for single quotation marks): these
+are matters of grammar/language convention, decided solely by which
+variant the user selected, never by the style guide. The STYLE GUIDE
+governs everything outside of that — numbers, dates, citation and
+footnote style, capitalization of specific terms, abbreviations, italics
+conventions, hyphenation, and word-choice/usage preferences — apply it
+fully for those regardless of variant.
 
 You are returning plain text, which has no way to represent italics directly.
 Where the style guide requires italics (for example the title of a book,
