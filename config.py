@@ -16,6 +16,15 @@ GEMINI_RETRY_ATTEMPTS = 4
 GEMINI_RETRY_INITIAL_DELAY_S = 2.0
 GEMINI_RETRY_MAX_DELAY_S = 30.0
 
+# HTTP status codes worth retrying (transient: rate limiting, server-side
+# hiccups). Any other status code from the API (e.g. 401/403 auth errors,
+# 402 exhausted billing, 400 bad request) is treated as fatal — retrying it
+# is guaranteed to fail again, so both the SDK's own retry_options and our
+# manual retry wrapper (gemini_client.py) skip retrying those and fail fast
+# instead of burning through the full retry budget on every single paragraph
+# in the document.
+GEMINI_RETRYABLE_HTTP_STATUS_CODES = [429, 500, 502, 503, 504]
+
 # Bounded rather than -1 (dynamic/unlimited): a 150-paragraph chunk has been
 # observed spending ~27,000 thinking tokens and taking minutes, which is most
 # of the tool's worst-case latency and timeout risk. Isolated single

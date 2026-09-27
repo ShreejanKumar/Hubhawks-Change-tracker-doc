@@ -1,8 +1,10 @@
 EDITING STYLESHEET
+
 ● ORTHOGRAPHY
 ○ Which spelling variant to use is a grammar matter decided by the
 manuscript's selected English convention (British or American), not by
 this style guide. Keep it fully consistent throughout the book.
+
 ● NUMBER:
 ○ From one to hundred, these should be in words, and thereafter in
 numerals.
@@ -15,6 +17,7 @@ symbol – 35%; in humanistic copy, the word percent should be used (one
 word)
 ○ No apostrophe between the year and the ‘s’: 1990s.
 ○ A single open close quote to highlight dates written thus: 90s’
+
 CAPITALS
 ● Designations are capitalised when the designation is used as a prefix to the
 name. E.g. Prime Minister Narendra Modi, but in lower case otherwise, as in
@@ -33,12 +36,14 @@ with ‘independence’.
 lines of capitals or small capitals.
 ● Acronyms should always be explained in brackets in the first instance, as in All
 India Radio (AIR), and only the acronym used in subsequent references.
+
 FULL POINT
 ● Use periods in the case of initials, as in J.P. Singh.
 ● Abbreviations and contractions consisting of upper and lower cases take full
 points as in Mt. (Mount) St. (Saint) Ph.D (Doctor ‘of Philosophy), exceptions to
 be made for Rs, Dr (Doctor) Revd (Reverend: not Rev), Mr, Mrs, Mme, Mlle
 (Mademoiselle), Prof, Col - here full points are not required.
+
 ITALICS
 ● Common/generic Indian words – masala, dhoti, kurta, salaam, ghazal, bhangra,
 bharatnatyam, kathak, ji, dada, mama, chacha – may be excluded from
@@ -65,6 +70,7 @@ coordinate and work out a style with the author.
 ○ The French, having occupied Portugal, began to advance into Spain.
 ○ Be assured, then, that order, frugality, and economy are the necessary
 supporters of every personal and private virtue.
+
 DIALOGUE WRITING PUNCTUATION RULES
 The examples below illustrate comma/period placement and capitalization
 mechanics only — some happen to use single quote marks and some double,
@@ -72,6 +78,7 @@ but which quote-mark family to actually use is a grammar matter decided
 by the manuscript's selected English convention, not by this style guide;
 apply whichever family that convention calls for rather than copying the
 example's own quote marks literally.
+
 I
 ● Comma before the opening quotation mark.
 ● Capital letter to indicate the beginning of a sentence inside the opening
@@ -80,6 +87,7 @@ quotation mark.
 ● Closing quotation mark.
 ○ Example: Mary said, “Call me tomorrow.”
 ○ “Call me tomorrow,” Mary said.
+
 II
 ● Capital letter to indicate the beginning of a sentence inside the opening
 quotation mark.
@@ -87,6 +95,7 @@ quotation mark.
 precedes the dialogue tag.
 ● Dialogue tag at the end with a period to end the sentence.
 ○ Example: “Call me,” Mary said, “tomorrow.”
+
 III
 ● If some expression does not hint at the dialogue having been said out loud, it
 need not be preceded or followed by a comma.
@@ -102,6 +111,7 @@ quote, we would use double quote marks for the quote-within-a-quote:
 ○ ‘He called me an “arrogant fool” when I said I’d seen bigger horses.’
 ○ Here, we use double quote marks around ‘arrogant fool’. This shows that
 the speaker is quoting someone else within their dialogue.
+
 V
 ● A good guideline when formatting dialogue is ‘new speaker, new paragraph’.
 This means that when someone new starts speaking, you set the dialogue on a
@@ -112,6 +122,7 @@ to himself.
 ‘I’m watching this massive horse,’ Craig said.
 ‘Well, I can see that,’ Shannon said. ‘But you’ve been here for six hours,
 Craig.’
+
 VI
 ● One passage of dialogue may require multiple paragraphs.
 ○ For instance, a character may be telling another character a story within
@@ -130,10 +141,12 @@ Moore, the guy who played the Lone Ranger on TV. And he was over six
 feet tall, so I knew that Silver couldn’t have been as small as the ponies
 on my grandparents’ farm! It had all been a lie! I felt so betrayed. And
 ever since then, I have been looking for the biggest horse I can find.’
+
 VII
 ● Use ellipses to show that speech has trailed off.
 ○ Example: ‘I don’t know why you have a problem with…’ Craig said, before
 falling into silence.
+
 VIII
 ● Use capitalization to indicate the end of the sentence.
 ○ When writing dialogue, only capitalize the first letter of a word to

@@ -10,6 +10,7 @@ import time
 
 import streamlit as st
 from google import genai
+from google.genai import errors as genai_errors
 from google.genai import types
 from pydantic import BaseModel
 
@@ -21,6 +22,7 @@ from config import (
     GEMINI_RETRY_ATTEMPTS,
     GEMINI_RETRY_INITIAL_DELAY_S,
     GEMINI_RETRY_MAX_DELAY_S,
+    GEMINI_RETRYABLE_HTTP_STATUS_CODES,
     GEMINI_SEED,
     GEMINI_THINKING_BUDGET,
 )
@@ -31,6 +33,15 @@ logger = logging.getLogger(__name__)
 class ParagraphCorrection(BaseModel):
     id: int
     corrected_text: str
+
+
+def _is_fatal_api_error(exc: Exception) -> bool:
+    """True for a Gemini API error that retrying cannot fix (bad API key,
+    exhausted billing, a request the API itself rejects, etc.), as opposed
+    to a transient one (rate limit, timeout, server hiccup) — those raise
+    exception types other than APIError, or an APIError whose code is in
+    the retryable list, and are not fatal."""
+    return isinstance(exc, genai_errors.APIError) and exc.code not in GEMINI_RETRYABLE_HTTP_STATUS_CODES
 
 
 SYSTEM_PREAMBLE = """You are a professional copyeditor performing proofreading only.
@@ -172,7 +183,7 @@ def _call_gemini(
                     attempts=GEMINI_RETRY_ATTEMPTS,
                     initial_delay=GEMINI_RETRY_INITIAL_DELAY_S,
                     max_delay=GEMINI_RETRY_MAX_DELAY_S,
-                    http_status_codes=[429, 500, 502, 503, 504],
+                    http_status_codes=GEMINI_RETRYABLE_HTTP_STATUS_CODES,
                 ),
             ),
         ),
@@ -193,11 +204,21 @@ def _call_gemini_with_retries(
     exception and would otherwise get exactly one attempt before the whole
     paragraph range falls through to the split/give-up logic below. Retry
     those too, so a single transient blip doesn't need a full split-and-retry
-    detour (or, at the single-paragraph leaf, doesn't mean giving up outright)."""
+    detour (or, at the single-paragraph leaf, doesn't mean giving up outright).
+
+    A fatal API error (bad key, exhausted billing, etc.) is the opposite
+    case: it will fail identically on every attempt, so it's raised
+    immediately on the first attempt rather than burning the retry budget."""
     for attempt in range(GEMINI_MANUAL_RETRY_ATTEMPTS):
         try:
             return _call_gemini(paragraphs, style_guide_text, variant, extra_instruction)
-        except Exception:
+        except Exception as exc:
+            if _is_fatal_api_error(exc):
+                logger.error(
+                    "Gemini call hit a non-retryable API error (%s); failing "
+                    "immediately instead of retrying", exc,
+                )
+                raise
             if attempt == GEMINI_MANUAL_RETRY_ATTEMPTS - 1:
                 raise
             ids = {p.id for p in paragraphs}
@@ -216,14 +237,21 @@ def correct_paragraphs(
     extra_instruction: str = "",
 ) -> tuple[dict[int, str], set[int]]:
     """Correct a list of paragraphs via Gemini, validating the response's
-    id-set matches exactly what was sent. On any mismatch or error,
-    recursively halves the chunk and retries, down to per-paragraph calls.
-    A paragraph that still fails alone falls back to its original text
-    unchanged rather than being silently dropped, but its id is reported in
-    the second return value so callers can tell "left unchanged because
-    nothing needed fixing" apart from "left unchanged because Gemini never
-    returned a usable correction" — the two look identical in the output
-    docx otherwise.
+    id-set matches exactly what was sent. On a transient error or id
+    mismatch, recursively halves the chunk and retries, down to
+    per-paragraph calls. A paragraph that still fails alone falls back to
+    its original text unchanged rather than being silently dropped, but its
+    id is reported in the second return value so callers can tell "left
+    unchanged because nothing needed fixing" apart from "left unchanged
+    because Gemini never returned a usable correction" — the two look
+    identical in the output docx otherwise.
+
+    A fatal (non-retryable) API error is deliberately NOT caught here: it
+    propagates straight out, skipping the halve-and-retry dance entirely,
+    so a systemic failure (exhausted billing, revoked key, etc.) stops the
+    whole run on the first paragraph it hits instead of grinding through
+    every remaining paragraph/chunk in the document repeating the same
+    doomed call.
     """
     if not paragraphs:
         return {}, set()
@@ -231,7 +259,9 @@ def correct_paragraphs(
     expected_ids = {p.id for p in paragraphs}
     try:
         result = _call_gemini_with_retries(paragraphs, style_guide_text, variant, extra_instruction)
-    except Exception:
+    except Exception as exc:
+        if _is_fatal_api_error(exc):
+            raise
         logger.exception(
             "Gemini call failed for paragraph ids %d-%d (%d paragraphs)",
             min(expected_ids), max(expected_ids), len(paragraphs),
