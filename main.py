@@ -18,7 +18,7 @@ import docx_extract as de
 import docx_track_changes as tc
 import gemini_client
 import style_guides
-from config import MAX_CHANGED_TOKEN_RATIO
+from config import MAX_CHANGED_TOKEN_RATIO, MIN_TOKENS_FOR_CHANGE_RATIO_GUARDRAIL
 
 logger = logging.getLogger(__name__)
 
@@ -110,7 +110,8 @@ def process_document(
                 continue
 
             ratio = tc.changed_token_ratio(extraction, corrected_text)
-            if ratio > MAX_CHANGED_TOKEN_RATIO:
+            guardrail_applies = tc.token_count(extraction.text) >= MIN_TOKENS_FOR_CHANGE_RATIO_GUARDRAIL
+            if guardrail_applies and ratio > MAX_CHANGED_TOKEN_RATIO:
                 retry_result, retry_failed = gemini_client.correct_paragraphs(
                     [chunking.IndexedParagraph(id=i, text=extraction.text)],
                     style_guide_text,

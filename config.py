@@ -49,6 +49,17 @@ CHARS_PER_TOKEN_ESTIMATE = 4
 # we retry with a stricter "make fewer changes" instruction.
 MAX_CHANGED_TOKEN_RATIO = 0.35
 
+# The ratio above is only meaningful against a large-enough denominator. A
+# paragraph below this many tokens (e.g. a one-line "Please come in..."
+# exclamation, tokenizing to ~8 tokens including each punctuation mark as
+# its own token) can have a single, entirely correct mechanical fix -- like
+# expanding one ellipsis character into the style guide's " . . ." spacing
+# -- dominate its ratio and trip the guardrail purely because there was so
+# little else in the paragraph to divide by. Below this floor, the ratio
+# guardrail (retry + flagging) is skipped entirely and the correction is
+# just applied.
+MIN_TOKENS_FOR_CHANGE_RATIO_GUARDRAIL = 10
+
 STYLE_GUIDES = {
     "old_inhouse": {
         "label": "Old In-House Stylesheet",

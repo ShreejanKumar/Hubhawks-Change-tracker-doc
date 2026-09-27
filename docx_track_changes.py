@@ -430,6 +430,14 @@ def apply_track_changes(
         p_elem.insert(insert_index + offset, child)
 
 
+def token_count(text: str) -> int:
+    """Number of tokens changed_token_ratio would divide by -- used by the
+    guardrail's short-paragraph floor (config.MIN_TOKENS_FOR_CHANGE_RATIO_GUARDRAIL):
+    a ratio computed against a denominator this small is dominated by even
+    one legitimate small edit, so it isn't a meaningful signal below it."""
+    return len(_tokenize(text))
+
+
 def changed_token_ratio(extraction: ParagraphExtraction, corrected_text: str) -> float:
     """Fraction of the paragraph's tokens touched by replace/insert/delete
     opcodes — used by the guardrail. Mirrors the same respacing suppression
