@@ -4,9 +4,9 @@ id-validation retry/split fallback for unreliable chunk responses.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
-import time
 
 import streamlit as st
 from google import genai
@@ -145,8 +145,19 @@ set of ids in your response must exactly match the set of ids you were
 given."""
 
 
-@st.cache_resource
-def _client() -> genai.Client:
+def new_client() -> genai.Client:
+    """A fresh client for the caller to use for the lifetime of one
+    asyncio.run() call, then close via `await client.aio.aclose()`.
+
+    Deliberately NOT cached/reused across calls (unlike this module's other
+    Gemini/GCS/Firestore-style singletons elsewhere in the app): genai.Client
+    eagerly constructs an httpx.AsyncClient at __init__, and that async
+    client's connection pool binds internal synchronization primitives to
+    whichever asyncio event loop is running when it's first used. Reusing
+    one cached instance across multiple asyncio.run() calls -- each of
+    which spins up and tears down its own event loop -- risks binding it to
+    a now-closed loop. Constructing a client is cheap (no network I/O), so
+    a fresh one per run avoids that risk entirely."""
     return genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
 
@@ -157,17 +168,17 @@ def _build_system_instruction(style_guide_text: str, variant: str, extra_instruc
     return instruction
 
 
-def _call_gemini(
+async def _call_gemini(
+    client: genai.Client,
     paragraphs: list[IndexedParagraph],
     style_guide_text: str,
     variant: str,
     extra_instruction: str,
 ) -> dict[int, str]:
-    client = _client()
     system_instruction = _build_system_instruction(style_guide_text, variant, extra_instruction)
     payload = json.dumps([{"id": p.id, "text": p.text} for p in paragraphs])
 
-    response = client.models.generate_content(
+    response = await client.aio.models.generate_content(
         model=GEMINI_MODEL,
         contents=payload,
         config=types.GenerateContentConfig(
@@ -193,7 +204,8 @@ def _call_gemini(
     return {c.id: c.corrected_text for c in corrections}
 
 
-def _call_gemini_with_retries(
+async def _call_gemini_with_retries(
+    client: genai.Client,
     paragraphs: list[IndexedParagraph],
     style_guide_text: str,
     variant: str,
@@ -211,7 +223,7 @@ def _call_gemini_with_retries(
     immediately on the first attempt rather than burning the retry budget."""
     for attempt in range(GEMINI_MANUAL_RETRY_ATTEMPTS):
         try:
-            return _call_gemini(paragraphs, style_guide_text, variant, extra_instruction)
+            return await _call_gemini(client, paragraphs, style_guide_text, variant, extra_instruction)
         except Exception as exc:
             if _is_fatal_api_error(exc):
                 logger.error(
@@ -227,10 +239,11 @@ def _call_gemini_with_retries(
                 attempt + 1, GEMINI_MANUAL_RETRY_ATTEMPTS, min(ids), max(ids),
                 exc_info=True,
             )
-            time.sleep(GEMINI_RETRY_INITIAL_DELAY_S * (attempt + 1))
+            await asyncio.sleep(GEMINI_RETRY_INITIAL_DELAY_S * (attempt + 1))
 
 
-def correct_paragraphs(
+async def correct_paragraphs(
+    client: genai.Client,
     paragraphs: list[IndexedParagraph],
     style_guide_text: str,
     variant: str,
@@ -246,6 +259,13 @@ def correct_paragraphs(
     because Gemini never returned a usable correction" — the two look
     identical in the output docx otherwise.
 
+    The recursive left/right halves are awaited sequentially rather than
+    concurrently: this fallback path only runs after something has already
+    gone wrong, so it's rare, and keeping it sequential keeps the maximum
+    number of concurrent Gemini calls in flight bounded by whatever the
+    caller's own concurrency limit is (e.g. main.py's per-chunk semaphore),
+    rather than multiplying it out during retries.
+
     A fatal (non-retryable) API error is deliberately NOT caught here: it
     propagates straight out, skipping the halve-and-retry dance entirely,
     so a systemic failure (exhausted billing, revoked key, etc.) stops the
@@ -258,7 +278,7 @@ def correct_paragraphs(
 
     expected_ids = {p.id for p in paragraphs}
     try:
-        result = _call_gemini_with_retries(paragraphs, style_guide_text, variant, extra_instruction)
+        result = await _call_gemini_with_retries(client, paragraphs, style_guide_text, variant, extra_instruction)
     except Exception as exc:
         if _is_fatal_api_error(exc):
             raise
@@ -279,9 +299,26 @@ def correct_paragraphs(
     left, right = split_in_half(paragraphs)
     merged: dict[int, str] = {}
     failed: set[int] = set()
-    left_result, left_failed = correct_paragraphs(left, style_guide_text, variant, extra_instruction)
-    right_result, right_failed = correct_paragraphs(right, style_guide_text, variant, extra_instruction)
+    left_result, left_failed = await correct_paragraphs(client, left, style_guide_text, variant, extra_instruction)
+    right_result, right_failed = await correct_paragraphs(client, right, style_guide_text, variant, extra_instruction)
     merged.update(left_result)
     merged.update(right_result)
     failed |= left_failed | right_failed
     return merged, failed
+
+
+async def correct_paragraphs_standalone(
+    paragraphs: list[IndexedParagraph],
+    style_guide_text: str,
+    variant: str,
+    extra_instruction: str = "",
+) -> tuple[dict[int, str], set[int]]:
+    """Same as correct_paragraphs, but creates and closes its own client --
+    for a caller that needs a single isolated correction (e.g. main.py's
+    one-off guardrail retry) rather than sharing one client across a batch
+    of concurrent chunk calls."""
+    client = new_client()
+    try:
+        return await correct_paragraphs(client, paragraphs, style_guide_text, variant, extra_instruction)
+    finally:
+        await client.aio.aclose()

@@ -4,6 +4,7 @@ guardrail -> track-changes injection -> save.
 
 from __future__ import annotations
 
+import asyncio
 import io
 import logging
 import re
@@ -18,7 +19,11 @@ import docx_extract as de
 import docx_track_changes as tc
 import gemini_client
 import style_guides
-from config import MAX_CHANGED_TOKEN_RATIO, MIN_TOKENS_FOR_CHANGE_RATIO_GUARDRAIL
+from config import (
+    GEMINI_MAX_CONCURRENT_CHUNKS,
+    MAX_CHANGED_TOKEN_RATIO,
+    MIN_TOKENS_FOR_CHANGE_RATIO_GUARDRAIL,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +67,57 @@ class ProcessResult:
 ProgressCallback = Callable[[int, int], None]
 
 
+async def _correct_all_chunks(
+    chunks: list[list[chunking.IndexedParagraph]],
+    style_guide_text: str,
+    variant: str,
+    progress_callback: Optional[ProgressCallback],
+) -> tuple[dict[int, str], set[int]]:
+    """Corrects every chunk concurrently (bounded by
+    GEMINI_MAX_CONCURRENT_CHUNKS), sharing one Gemini client across them for
+    the lifetime of this event loop. Chunks have no cross-chunk dependency
+    -- gemini_client's "surrounding paragraph" context only spans paragraphs
+    within a single chunk to begin with -- so this only changes wall-clock
+    time, never the corrections themselves.
+
+    If any chunk hits a fatal (non-retryable) API error, the remaining
+    in-flight chunks are cancelled before the client is closed and the
+    exception propagates to the caller, rather than letting them keep
+    running against a client that's about to be torn down.
+    """
+    client = gemini_client.new_client()
+    semaphore = asyncio.Semaphore(GEMINI_MAX_CONCURRENT_CHUNKS)
+    total = max(len(chunks), 1)
+    done = 0
+
+    async def run_chunk(chunk: list[chunking.IndexedParagraph]) -> tuple[dict[int, str], set[int]]:
+        nonlocal done
+        async with semaphore:
+            chunk_result, chunk_failed = await gemini_client.correct_paragraphs(client, chunk, style_guide_text, variant)
+        done += 1
+        if progress_callback:
+            progress_callback(done, total)
+        return chunk_result, chunk_failed
+
+    tasks = [asyncio.create_task(run_chunk(chunk)) for chunk in chunks]
+    try:
+        results = await asyncio.gather(*tasks)
+    except BaseException:
+        for task in tasks:
+            task.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
+        raise
+    finally:
+        await client.aio.aclose()
+
+    corrected_by_id: dict[int, str] = {}
+    failed_ids: set[int] = set()
+    for chunk_result, chunk_failed in results:
+        corrected_by_id.update(chunk_result)
+        failed_ids |= chunk_failed
+    return corrected_by_id, failed_ids
+
+
 def process_document(
     docx_bytes: bytes,
     author: str,
@@ -81,14 +137,9 @@ def process_document(
     ]
     chunks = chunking.build_chunks(indexed)
 
-    corrected_by_id: dict[int, str] = {}
-    failed_ids: set[int] = set()
-    for chunk_num, chunk in enumerate(chunks):
-        chunk_result, chunk_failed = gemini_client.correct_paragraphs(chunk, style_guide_text, variant)
-        corrected_by_id.update(chunk_result)
-        failed_ids |= chunk_failed
-        if progress_callback:
-            progress_callback(chunk_num + 1, max(len(chunks), 1))
+    corrected_by_id, failed_ids = asyncio.run(
+        _correct_all_chunks(chunks, style_guide_text, variant, progress_callback)
+    )
 
     revision_date = datetime.now(timezone.utc).isoformat()
     id_gen = tc.make_id_counter(document)
@@ -112,11 +163,13 @@ def process_document(
             ratio = tc.changed_token_ratio(extraction, corrected_text)
             guardrail_applies = tc.token_count(extraction.text) >= MIN_TOKENS_FOR_CHANGE_RATIO_GUARDRAIL
             if guardrail_applies and ratio > MAX_CHANGED_TOKEN_RATIO:
-                retry_result, retry_failed = gemini_client.correct_paragraphs(
-                    [chunking.IndexedParagraph(id=i, text=extraction.text)],
-                    style_guide_text,
-                    variant,
-                    extra_instruction=GUARDRAIL_RETRY_INSTRUCTION,
+                retry_result, retry_failed = asyncio.run(
+                    gemini_client.correct_paragraphs_standalone(
+                        [chunking.IndexedParagraph(id=i, text=extraction.text)],
+                        style_guide_text,
+                        variant,
+                        extra_instruction=GUARDRAIL_RETRY_INSTRUCTION,
+                    )
                 )
                 failed_ids |= retry_failed
                 raw_retried_text = _restore_edge_whitespace(

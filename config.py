@@ -45,6 +45,16 @@ MAX_PARAGRAPHS_PER_CHUNK = 150
 SINGLE_PARAGRAPH_HARD_CAP_TOKENS = 30000
 CHARS_PER_TOKEN_ESTIMATE = 4
 
+# How many chunks may be corrected concurrently within a single document
+# run. Bounded rather than unlimited: Streamlit Community Cloud runs this
+# app as a single process shared by every visitor (see the processing lock
+# in app.py), so firing every chunk in a large document at once would
+# multiply that one document's peak memory/API load well beyond what a
+# sequential run needs, and risks tripping Gemini's own rate limits. 3
+# gives a meaningful wall-clock speedup for multi-chunk documents while
+# keeping that peak bounded and predictable.
+GEMINI_MAX_CONCURRENT_CHUNKS = 3
+
 # Guardrail: fraction of a paragraph's tokens that may be changed before
 # we retry with a stricter "make fewer changes" instruction.
 MAX_CHANGED_TOKEN_RATIO = 0.35
