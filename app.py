@@ -1,4 +1,5 @@
 import logging
+import threading
 from pathlib import Path
 
 import streamlit as st
@@ -9,6 +10,18 @@ import main
 from config import ENGLISH_VARIANTS, STYLE_GUIDES
 
 logger = logging.getLogger(__name__)
+
+
+@st.cache_resource
+def _processing_lock() -> threading.Lock:
+    """Only one proofreading run may execute at a time app-wide. Streamlit
+    Community Cloud runs this app as a single process shared by every
+    visitor, and a large manuscript's Gemini calls plus in-memory docx
+    handling can use enough memory that concurrent runs risk hitting the
+    platform's shared memory ceiling and crashing the app for everyone. A
+    second run queues here instead of piling onto the first."""
+    return threading.Lock()
+
 
 st.set_page_config(page_title="Hubhawks Change Tracker", page_icon="📝", layout="wide")
 
@@ -162,34 +175,48 @@ else:
             progress_bar.progress(done / total)
             status_text.text(f"Processing chunk {done} of {total}...")
 
+        lock = _processing_lock()
+        waiting_notice = st.empty()
+        if lock.locked():
+            waiting_notice.info(
+                "Another proofreading run is currently in progress — only one "
+                "run executes at a time to avoid overloading the app. Yours "
+                "will start automatically as soon as it's free."
+            )
+        lock.acquire()
+        waiting_notice.empty()
+
         try:
-            with st.spinner("Running proofreading..."):
-                result = main.process_document(
-                    docx_bytes=uploaded_file.getvalue(),
-                    author=editor_name.strip() or "Editor",
-                    variant=variant,
-                    style_guide_key=style_guide_key,
-                    progress_callback=on_progress,
+            try:
+                with st.spinner("Running proofreading..."):
+                    result = main.process_document(
+                        docx_bytes=uploaded_file.getvalue(),
+                        author=editor_name.strip() or "Editor",
+                        variant=variant,
+                        style_guide_key=style_guide_key,
+                        progress_callback=on_progress,
+                    )
+            except genai_errors.APIError as exc:
+                logger.exception("Proofreading run stopped by a non-retryable Gemini API error")
+                st.error(
+                    f"Gemini API error ({exc.code} {exc.status}): {exc.message or exc}. "
+                    "This is a billing/quota or authentication problem with the Gemini "
+                    "API key, not an issue with your document — the run was stopped "
+                    "immediately rather than retrying every paragraph. Please check "
+                    "the API key's billing status and try again."
                 )
-        except genai_errors.APIError as exc:
-            logger.exception("Proofreading run stopped by a non-retryable Gemini API error")
-            st.error(
-                f"Gemini API error ({exc.code} {exc.status}): {exc.message or exc}. "
-                "This is a billing/quota or authentication problem with the Gemini "
-                "API key, not an issue with your document — the run was stopped "
-                "immediately rather than retrying every paragraph. Please check "
-                "the API key's billing status and try again."
-            )
-            st.stop()
-        except Exception as exc:
-            logger.exception("Proofreading run failed")
-            st.error(
-                f"Something went wrong while processing this document: {exc}. "
-                "This may mean the file isn't a valid/supported .docx, or "
-                "contains a paragraph too large to process. Try a different "
-                "file, or contact support if this keeps happening."
-            )
-            st.stop()
+                st.stop()
+            except Exception as exc:
+                logger.exception("Proofreading run failed")
+                st.error(
+                    f"Something went wrong while processing this document: {exc}. "
+                    "This may mean the file isn't a valid/supported .docx, or "
+                    "contains a paragraph too large to process. Try a different "
+                    "file, or contact support if this keeps happening."
+                )
+                st.stop()
+        finally:
+            lock.release()
 
         progress_bar.progress(1.0)
         status_text.empty()
