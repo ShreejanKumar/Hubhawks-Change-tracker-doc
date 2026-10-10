@@ -1,13 +1,14 @@
+from functools import lru_cache
 from pathlib import Path
-
-import streamlit as st
 
 from config import STYLE_GUIDES
 
 ROOT = Path(__file__).resolve().parent
 
 
-@st.cache_resource
+# lru_cache rather than st.cache_resource: this also runs in the Cloud Run
+# worker, outside any Streamlit runtime.
+@lru_cache(maxsize=1)
 def load_style_guides() -> dict[str, str]:
     guides = {}
     for key, info in STYLE_GUIDES.items():

@@ -1,27 +1,46 @@
 import logging
-import threading
-from pathlib import Path
 
 import streamlit as st
-from google.genai import errors as genai_errors
 
 import history_store
-import main
+import job_launcher
+from app_secrets import get_secret
 from config import ENGLISH_VARIANTS, STYLE_GUIDES
 
 logger = logging.getLogger(__name__)
 
+# Proofreading runs in a Cloud Run Job (worker.py), not in this script. Runs
+# used to execute here and were silently lost when a long run's websocket
+# reconnected (Streamlit reruns the script and abandons the run in
+# progress), and the app-wide lock this process needed meant editors queued
+# behind each other. Now this page only creates a run, starts its job, and
+# reads the run's Firestore doc, so refreshing, reconnecting, logging out
+# or redeploying never loses a run, and any number of runs proceed at once.
 
-@st.cache_resource
-def _processing_lock() -> threading.Lock:
-    """Only one proofreading run may execute at a time app-wide. Streamlit
-    Community Cloud runs this app as a single process shared by every
-    visitor, and a large manuscript's Gemini calls plus in-memory docx
-    handling can use enough memory that concurrent runs risk hitting the
-    platform's shared memory ceiling and crashing the app for everyone. A
-    second run queues here instead of piling onto the first."""
-    return threading.Lock()
+STATUS_POLL_INTERVAL_S = 5
 
+# Editor-facing messages per worker error kind (worker.py / history_store.fail_run).
+FAILURE_MESSAGES = {
+    "gemini_api": (
+        "Gemini API error ({detail}). This is a billing/quota or authentication "
+        "problem with the Gemini API key, not an issue with your document — the "
+        "run was stopped immediately rather than retrying every paragraph. Please "
+        "check the API key's billing status and try again."
+    ),
+    "paragraph_too_large": (
+        "This document contains a paragraph too large to process ({detail}). "
+        "Split that paragraph in Word and try again."
+    ),
+    "launch": (
+        "The processing job couldn't be started ({detail}). Nothing was "
+        "processed; please try again, or contact support if this keeps happening."
+    ),
+    "other": (
+        "Something went wrong while processing this document ({detail}). This may "
+        "mean the file isn't a valid/supported .docx. Try a different file, or "
+        "contact support if this keeps happening."
+    ),
+}
 
 st.set_page_config(page_title="Hubhawks Change Tracker", page_icon="📝", layout="wide")
 
@@ -32,7 +51,7 @@ if not st.session_state["authenticated"]:
     st.title("Login")
     password_input = st.text_input("Enter Password", type="password")
     if st.button("Login"):
-        if password_input == st.secrets["APP_PASSWORD"]:
+        if password_input == get_secret("APP_PASSWORD"):
             st.session_state["authenticated"] = True
             st.rerun()
         else:
@@ -60,16 +79,64 @@ def render_flagged(flagged_list) -> None:
         "(the correction changed an unusually large portion of the text)"
     ):
         for flagged in flagged_list:
-            is_dict = isinstance(flagged, dict)
-            original = flagged["original"] if is_dict else flagged.original
-            corrected = flagged["corrected"] if is_dict else flagged.corrected
-            ratio = flagged["changed_ratio"] if is_dict else flagged.changed_ratio
             st.markdown("**Original:**")
-            st.text(original)
+            st.text(flagged["original"])
             st.markdown("**Corrected:**")
-            st.text(corrected)
-            st.caption(f"~{ratio:.0%} of words changed")
+            st.text(flagged["corrected"])
+            st.caption(f"~{flagged['changed_ratio']:.0%} of words changed")
             st.divider()
+
+
+def render_run_failed(run: dict) -> None:
+    if history_store.is_stale(run):
+        st.error(
+            "Processing stopped unexpectedly — the background job stopped reporting "
+            "progress, so this run will not finish. Please run the document again."
+        )
+        return
+    template = FAILURE_MESSAGES.get(run.get("error_kind"), FAILURE_MESSAGES["other"])
+    st.error(template.format(detail=run.get("error_message", "no details")))
+
+
+def status_label(run: dict) -> str:
+    status = history_store.run_status(run)
+    if history_store.is_stale(run) or status == history_store.STATUS_FAILED:
+        return "❌ failed"
+    if status == history_store.STATUS_QUEUED:
+        return "⏳ starting"
+    if status == history_store.STATUS_RUNNING:
+        total = run.get("chunks_total") or 0
+        return f"⏳ {run.get('chunks_done', 0)}/{total} parts" if total else "⏳ processing"
+    stats = f"{run.get('edited_paragraphs', 0)}/{run.get('total_paragraphs', 0)} edited"
+    if run.get("flagged_count"):
+        stats += f" · {run['flagged_count']} flagged"
+    return stats
+
+
+def is_in_progress(run: dict) -> bool:
+    return (
+        history_store.run_status(run) in (history_store.STATUS_QUEUED, history_store.STATUS_RUNNING)
+        and not history_store.is_stale(run)
+    )
+
+
+@st.fragment(run_every=STATUS_POLL_INTERVAL_S)
+def render_progress(run_id: str) -> None:
+    """Polls only this fragment, not the whole page. Once the worker finishes
+    (or stops reporting), reruns the full app so the sidebar and the result
+    view pick up the final state."""
+    run = history_store.get_run(run_id)
+    if run is None or not is_in_progress(run):
+        st.rerun(scope="app")
+    total = run.get("chunks_total") or 0
+    done = run.get("chunks_done", 0)
+    st.progress(done / total if total else 0.0)
+    if history_store.run_status(run) == history_store.STATUS_QUEUED:
+        st.caption("Starting the processing job…")
+    elif total:
+        st.caption(f"Processed {done} of {total} parts of the document…")
+    else:
+        st.caption("Reading the document…")
 
 
 # ---------------------------------------------------------------- Sidebar --
@@ -97,21 +164,22 @@ with st.sidebar:
     for run in runs:
         created = run.get("created_at")
         created_label = created.strftime("%b %d, %H:%M") if created else "just now"
-        stats = f"{run.get('edited_paragraphs', 0)}/{run.get('total_paragraphs', 0)} edited"
-        if run.get("flagged_count"):
-            stats += f" · {run['flagged_count']} flagged"
 
         with st.container(border=True):
             st.markdown(f"**{run.get('source_filename', 'Untitled')}**")
-            st.caption(f"{created_label} · {run.get('editor', '')} · {stats}")
+            st.caption(f"{created_label} · {run.get('editor', '')} · {status_label(run)}")
             col_view, col_delete = st.columns([3, 1])
             with col_view:
                 if st.button("View", key=f"view_{run['run_id']}", use_container_width=True):
                     st.session_state["selected_run_id"] = run["run_id"]
                     st.rerun()
             with col_delete:
-                if st.button("🗑️", key=f"del_{run['run_id']}", help="Delete this run"):
-                    history_store.delete_run(run["run_id"], run["gcs_path"])
+                # Not while it is still processing: the worker would only
+                # stop at its next write, after spending the Gemini calls.
+                if not is_in_progress(run) and st.button(
+                    "🗑️", key=f"del_{run['run_id']}", help="Delete this run"
+                ):
+                    history_store.delete_run(run["run_id"])
                     if st.session_state["selected_run_id"] == run["run_id"]:
                         st.session_state["selected_run_id"] = None
                     st.rerun()
@@ -128,11 +196,20 @@ if selected_run_id:
         st.warning("That run no longer exists — it may have been deleted.")
         st.session_state["selected_run_id"] = None
         st.rerun()
-    else:
-        st.caption(
-            f"Viewing history · {run['source_filename']} · {run['editor']} · "
-            f"{run['variant']} · {run['style_guide_label']}"
+
+    st.caption(
+        f"{run['source_filename']} · {run['editor']} · "
+        f"{run['variant']} · {run['style_guide_label']}"
+    )
+    status = history_store.run_status(run)
+
+    if is_in_progress(run):
+        st.info(
+            "Processing in the background. You can leave this page, start another "
+            "document, or log out — the result will appear in History when it's done."
         )
+        render_progress(selected_run_id)
+    elif status == history_store.STATUS_DONE:
         st.success(
             f"{run['edited_paragraphs']} of {run['total_paragraphs']} paragraphs "
             "received tracked changes."
@@ -147,8 +224,10 @@ if selected_run_id:
             "Download corrected .docx",
             data=docx_bytes,
             file_name=run["output_filename"],
-            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            mime=history_store.DOCX_CONTENT_TYPE,
         )
+    else:
+        render_run_failed(run)
 else:
     st.caption(
         "Upload a .docx manuscript. Grammar, spelling, punctuation, and style-guide "
@@ -168,93 +247,28 @@ else:
     run_clicked = st.button("Run Proofreading", type="primary", disabled=uploaded_file is None)
 
     if run_clicked and uploaded_file is not None:
-        progress_bar = st.progress(0.0)
-        status_text = st.empty()
-
-        def on_progress(done: int, total: int) -> None:
-            progress_bar.progress(done / total)
-            status_text.text(f"Processing chunk {done} of {total}...")
-
-        lock = _processing_lock()
-        waiting_notice = st.empty()
-        if lock.locked():
-            waiting_notice.info(
-                "Another proofreading run is currently in progress — only one "
-                "run executes at a time to avoid overloading the app. Yours "
-                "will start automatically as soon as it's free."
-            )
-        lock.acquire()
-        waiting_notice.empty()
-
-        try:
+        with st.spinner("Uploading and starting the job…"):
             try:
-                with st.spinner("Running proofreading..."):
-                    result = main.process_document(
-                        docx_bytes=uploaded_file.getvalue(),
-                        author=editor_name.strip() or "Editor",
-                        variant=variant,
-                        style_guide_key=style_guide_key,
-                        progress_callback=on_progress,
-                    )
-            except genai_errors.APIError as exc:
-                logger.exception("Proofreading run stopped by a non-retryable Gemini API error")
-                st.error(
-                    f"Gemini API error ({exc.code} {exc.status}): {exc.message or exc}. "
-                    "This is a billing/quota or authentication problem with the Gemini "
-                    "API key, not an issue with your document — the run was stopped "
-                    "immediately rather than retrying every paragraph. Please check "
-                    "the API key's billing status and try again."
+                new_run_id = history_store.create_run(
+                    source_filename=uploaded_file.name,
+                    docx_bytes=uploaded_file.getvalue(),
+                    editor=editor_name.strip() or "Editor",
+                    variant=variant,
+                    style_guide_key=style_guide_key,
+                    style_guide_label=STYLE_GUIDES[style_guide_key]["label"],
                 )
-                st.stop()
             except Exception as exc:
-                logger.exception("Proofreading run failed")
-                st.error(
-                    f"Something went wrong while processing this document: {exc}. "
-                    "This may mean the file isn't a valid/supported .docx, or "
-                    "contains a paragraph too large to process. Try a different "
-                    "file, or contact support if this keeps happening."
-                )
+                logger.exception("Couldn't create run")
+                st.error(f"Couldn't upload the document: {exc}. Please try again.")
                 st.stop()
-        finally:
-            lock.release()
 
-        progress_bar.progress(1.0)
-        status_text.empty()
+            try:
+                job_launcher.start_run(new_run_id)
+            except Exception as exc:
+                # Record it on the run so it shows as failed in History
+                # rather than sitting "starting" until it goes stale.
+                logger.exception("Couldn't start job for run %s", new_run_id)
+                history_store.fail_run(new_run_id, "launch", str(exc))
 
-        out_name = f"{Path(uploaded_file.name).stem}_tracked.docx"
-
-        try:
-            new_run_id = history_store.save_run(
-                source_filename=uploaded_file.name,
-                output_filename=out_name,
-                editor=editor_name.strip() or "Editor",
-                variant=variant,
-                style_guide_key=style_guide_key,
-                style_guide_label=STYLE_GUIDES[style_guide_key]["label"],
-                result=result,
-            )
-        except Exception as exc:
-            new_run_id = None
-            st.warning(f"Processed successfully, but couldn't save to history: {exc}")
-
-        if new_run_id:
-            # Hand off to the history viewer above so the sidebar and main
-            # area both reflect the freshly saved run on the next rerun.
-            st.session_state["selected_run_id"] = new_run_id
-            st.rerun()
-
-        st.success(
-            f"Done. {result.edited_paragraphs} of {result.total_paragraphs} "
-            f"paragraphs received tracked changes."
-        )
-        render_failure_notice(result.failed_paragraphs, result.total_paragraphs)
-
-        if result.flagged_paragraphs:
-            render_flagged(result.flagged_paragraphs)
-
-        st.download_button(
-            "Download corrected .docx",
-            data=result.docx_bytes,
-            file_name=out_name,
-            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        )
+        st.session_state["selected_run_id"] = new_run_id
+        st.rerun()

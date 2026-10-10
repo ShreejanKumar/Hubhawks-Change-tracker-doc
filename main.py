@@ -67,6 +67,48 @@ class ProcessResult:
 ProgressCallback = Callable[[int, int], None]
 
 
+@dataclass
+class _PreparedCorrection:
+    raw_corrected_text: str
+    corrected_text: str
+    italic_spans: list[tuple[int, int]]
+    ratio: float
+    needs_retry: bool
+
+
+async def _guardrail_retries(
+    texts_by_id: dict[int, str],
+    style_guide_text: str,
+    variant: str,
+) -> dict[int, tuple[dict[int, str], set[int]] | BaseException]:
+    """One "make fewer changes" retry per paragraph, concurrently (bounded
+    like the chunks) over one shared client. Each paragraph is still its own
+    single-paragraph request, as before. Exceptions are returned per
+    paragraph rather than raised, so one paragraph's failure is isolated to
+    that paragraph exactly as when these ran one at a time."""
+    client = gemini_client.new_client()
+    semaphore = asyncio.Semaphore(GEMINI_MAX_CONCURRENT_CHUNKS)
+
+    async def retry_one(i: int, text: str):
+        async with semaphore:
+            return await gemini_client.correct_paragraphs(
+                client,
+                [chunking.IndexedParagraph(id=i, text=text)],
+                style_guide_text,
+                variant,
+                extra_instruction=GUARDRAIL_RETRY_INSTRUCTION,
+            )
+
+    try:
+        ids = list(texts_by_id)
+        outcomes = await asyncio.gather(
+            *(retry_one(i, texts_by_id[i]) for i in ids), return_exceptions=True
+        )
+    finally:
+        await client.aio.aclose()
+    return dict(zip(ids, outcomes))
+
+
 async def _correct_all_chunks(
     chunks: list[list[chunking.IndexedParagraph]],
     style_guide_text: str,
@@ -147,11 +189,13 @@ def process_document(
     edited_count = 0
     flagged: list[FlaggedParagraph] = []
 
-    for i, paragraph in enumerate(all_paragraphs):
+    # Pass 1: prepare each paragraph's correction and find the ones whose
+    # change ratio trips the guardrail.
+    prepared: dict[int, _PreparedCorrection] = {}
+    for i in range(len(all_paragraphs)):
         extraction = extractions[i]
         if not extraction.text or i not in corrected_by_id:
             continue
-
         try:
             raw_corrected_text = _restore_edge_whitespace(
                 extraction.text, tc.sanitize_for_xml(corrected_by_id[i])
@@ -159,22 +203,45 @@ def process_document(
             corrected_text, italic_spans = tc.strip_italic_markers(raw_corrected_text)
             if corrected_text == extraction.text and not italic_spans:
                 continue
-
             ratio = tc.changed_token_ratio(extraction, corrected_text)
             guardrail_applies = tc.token_count(extraction.text) >= MIN_TOKENS_FOR_CHANGE_RATIO_GUARDRAIL
-            if guardrail_applies and ratio > MAX_CHANGED_TOKEN_RATIO:
-                retry_result, retry_failed = asyncio.run(
-                    gemini_client.correct_paragraphs_standalone(
-                        [chunking.IndexedParagraph(id=i, text=extraction.text)],
-                        style_guide_text,
-                        variant,
-                        extra_instruction=GUARDRAIL_RETRY_INSTRUCTION,
-                    )
-                )
+            prepared[i] = _PreparedCorrection(
+                raw_corrected_text, corrected_text, italic_spans, ratio,
+                needs_retry=guardrail_applies and ratio > MAX_CHANGED_TOKEN_RATIO,
+            )
+        except Exception:
+            logger.exception("Failed to prepare correction for paragraph %d; left unchanged", i)
+            failed_ids.add(i)
+
+    # Pass 2: all guardrail retries at once. They used to run one after
+    # another after every chunk had finished; on a 2,100-paragraph manuscript
+    # ~23 sequential single-paragraph calls took ~5 minutes, longer than the
+    # chunks themselves. Each retry sends exactly the same request as before,
+    # so this changes wall-clock time only, never the corrections.
+    retry_ids = [i for i, p in prepared.items() if p.needs_retry]
+    retry_outcomes = (
+        asyncio.run(_guardrail_retries(
+            {i: extractions[i].text for i in retry_ids}, style_guide_text, variant
+        ))
+        if retry_ids
+        else {}
+    )
+
+    # Pass 3: pick the less-changed version where retried, flag what still
+    # changes too much, and inject the tracked changes.
+    for i, prep in prepared.items():
+        paragraph, extraction = all_paragraphs[i], extractions[i]
+        try:
+            corrected_text, italic_spans, ratio = prep.corrected_text, prep.italic_spans, prep.ratio
+            if prep.needs_retry:
+                outcome = retry_outcomes[i]
+                if isinstance(outcome, BaseException):
+                    raise outcome
+                retry_result, retry_failed = outcome
                 failed_ids |= retry_failed
                 raw_retried_text = _restore_edge_whitespace(
                     extraction.text,
-                    tc.sanitize_for_xml(retry_result.get(i, raw_corrected_text)),
+                    tc.sanitize_for_xml(retry_result.get(i, prep.raw_corrected_text)),
                 )
                 retried_text, retried_spans = tc.strip_italic_markers(raw_retried_text)
                 retried_ratio = tc.changed_token_ratio(extraction, retried_text)

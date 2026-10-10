@@ -13,13 +13,17 @@ you touch the matching files.
 
 | File | Role |
 |---|---|
-| `app.py` | UI: login, history sidebar, upload form, run lock, error banners |
+| `app.py` | UI only: login, history sidebar, upload → create run + start job, live status, results, error banners |
+| `worker.py` | Cloud Run Job entry point: runs one queued run, reports status/progress/heartbeat to Firestore |
+| `job_launcher.py` | Starts a job execution for a run (`RUN_ID` env override) |
+| `app_secrets.py` | Secrets from env (worker) or `st.secrets` (app) |
 | `main.py` | `process_document`: extract → chunk → Gemini (concurrent) → guardrail → track changes |
 | `gemini_client.py` | System prompt, Gemini calls, retries, halve-and-retry |
 | `chunking.py` | Pack paragraphs into chunks (never splits a paragraph) |
 | `docx_extract.py` | Paragraph text + offset map back to the XML |
 | `docx_track_changes.py` | Diff and rebuild paragraph XML with revisions |
-| `history_store.py` | GCS + Firestore history |
+| `history_store.py` | GCS + Firestore: run lifecycle (queued → running → done/failed) and history |
+| `Dockerfile`, `.gcloudignore` | Worker image (explicit file list, never secrets) |
 | `config.py` | Every tunable and the style guide registry |
 | `style_guides/*.txt` | Hand-edited guides sent to Gemini (source of truth) |
 
@@ -35,7 +39,11 @@ Proofread, never rewrite. No restructuring, no new content, no change of voice, 
 - Only 429/5xx are retried. Every other API error fails fast.
 - BrE/AmE rules live in the system prompt, never in the style guides.
 - Valid OOXML: revision ids are unique and above existing ids. `w:rPrChange` is the last child of `w:rPr`.
-- One run at a time app-wide, at most 3 concurrent chunk calls. A fresh Gemini client per `asyncio.run()`.
+- Proofreading never runs in the Streamlit script; it runs in the Cloud Run Job. A run must never
+  vanish silently: every end state is `done`, `failed`, or shown as stale (no heartbeat for 10 min).
+- Runs proceed in parallel (no lock). `GEMINI_MAX_CONCURRENT_CHUNKS` (10) per run, all runs share one
+  Gemini key (~150 RPM). A fresh Gemini client per `asyncio.run()`.
+- Never trade quality for speed: chunk size, thinking budget and prompt context stay as they are.
 - No dictionary-based spelling pass, ever.
 - Verify any model change end to end on a real manuscript before committing.
 
@@ -44,7 +52,10 @@ Proofread, never rewrite. No restructuring, no new content, no change of voice, 
 - This machine: Windows, conda env `book` (Python 3.10.12). Run with
   `conda run -n book streamlit run app.py`, or the skill script for a headless run.
 - Secrets: `.streamlit/secrets.toml` and `gcp-service-account.json`, both gitignored. Never read or print them.
-- Deployed on Streamlit Community Cloud from `main`: one process shared by every visitor.
+- UI deployed on Streamlit Community Cloud from `main`. Worker deployed separately as Cloud Run Job
+  `hubhawks-worker` (us-central1, same as Firestore and the bucket). A worker code change needs a
+  redeploy of the job, not just a push. See `.claude/rules/worker-and-infra.md`.
+- `gcloud` and Docker are installed on this machine.
 
 ## Working conventions
 

@@ -8,12 +8,12 @@ import asyncio
 import json
 import logging
 
-import streamlit as st
 from google import genai
 from google.genai import errors as genai_errors
 from google.genai import types
 from pydantic import BaseModel
 
+from app_secrets import get_secret
 from chunking import IndexedParagraph, split_in_half
 from config import (
     GEMINI_MANUAL_RETRY_ATTEMPTS,
@@ -24,7 +24,7 @@ from config import (
     GEMINI_RETRY_MAX_DELAY_S,
     GEMINI_RETRYABLE_HTTP_STATUS_CODES,
     GEMINI_SEED,
-    GEMINI_THINKING_BUDGET,
+    GEMINI_THINKING_LEVEL,
 )
 
 logger = logging.getLogger(__name__)
@@ -158,7 +158,10 @@ def new_client() -> genai.Client:
     which spins up and tears down its own event loop -- risks binding it to
     a now-closed loop. Constructing a client is cheap (no network I/O), so
     a fresh one per run avoids that risk entirely."""
-    return genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
+    api_key = get_secret("GEMINI_API_KEY")
+    if not api_key:
+        raise RuntimeError("GEMINI_API_KEY is not set (env var or .streamlit/secrets.toml)")
+    return genai.Client(api_key=api_key)
 
 
 def _build_system_instruction(style_guide_text: str, variant: str, extra_instruction: str) -> str:
@@ -185,8 +188,7 @@ async def _call_gemini(
             system_instruction=system_instruction,
             response_mime_type="application/json",
             response_schema=list[ParagraphCorrection],
-            thinking_config=types.ThinkingConfig(thinking_budget=GEMINI_THINKING_BUDGET),
-            temperature=0,
+            thinking_config=types.ThinkingConfig(thinking_level=GEMINI_THINKING_LEVEL),
             seed=GEMINI_SEED,
             http_options=types.HttpOptions(
                 timeout=GEMINI_REQUEST_TIMEOUT_MS,
@@ -305,20 +307,3 @@ async def correct_paragraphs(
     merged.update(right_result)
     failed |= left_failed | right_failed
     return merged, failed
-
-
-async def correct_paragraphs_standalone(
-    paragraphs: list[IndexedParagraph],
-    style_guide_text: str,
-    variant: str,
-    extra_instruction: str = "",
-) -> tuple[dict[int, str], set[int]]:
-    """Same as correct_paragraphs, but creates and closes its own client --
-    for a caller that needs a single isolated correction (e.g. main.py's
-    one-off guardrail retry) rather than sharing one client across a batch
-    of concurrent chunk calls."""
-    client = new_client()
-    try:
-        return await correct_paragraphs(client, paragraphs, style_guide_text, variant, extra_instruction)
-    finally:
-        await client.aio.aclose()

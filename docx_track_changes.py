@@ -430,31 +430,31 @@ def apply_track_changes(
         p_elem.insert(insert_index + offset, child)
 
 
+_WORD_RE = re.compile(r"\w+")
+
+
 def token_count(text: str) -> int:
-    """Number of tokens changed_token_ratio would divide by -- used by the
+    """Number of words changed_token_ratio divides by -- used by the
     guardrail's short-paragraph floor (config.MIN_TOKENS_FOR_CHANGE_RATIO_GUARDRAIL):
     a ratio computed against a denominator this small is dominated by even
     one legitimate small edit, so it isn't a meaningful signal below it."""
-    return len(_tokenize(text))
+    return len(_WORD_RE.findall(text))
 
 
 def changed_token_ratio(extraction: ParagraphExtraction, corrected_text: str) -> float:
-    """Fraction of the paragraph's tokens touched by replace/insert/delete
-    opcodes — used by the guardrail. Mirrors the same respacing suppression
-    as build_new_children/_suppress_respacing_opcodes so the ratio reflects
-    what will actually be tracked, not cosmetic whitespace resizing."""
-    orig_tokens = _tokenize(extraction.text)
-    if not orig_tokens:
+    """Fraction of the paragraph's WORDS replaced, inserted or deleted -- used
+    by the guardrail. Words only: this used to diff the same tokens as the
+    tracked changes (words, whitespace, punctuation), but the whitespace
+    between words nearly always aligns as "equal", so even a paragraph with
+    every word replaced scored only ~0.5. Counting words makes the threshold
+    mean what it says ("60% of the words changed"), and punctuation-only or
+    spacing-only fixes (e.g. an ellipsis expanded to " . . .") count as 0."""
+    orig_words = _WORD_RE.findall(extraction.text)
+    if not orig_words:
         return 0.0
-    corr_tokens = _tokenize(corrected_text)
-    sm = difflib.SequenceMatcher(None, orig_tokens, corr_tokens, autojunk=False)
-    changed = 0
-    for tag, i1, i2, j1, j2 in sm.get_opcodes():
-        if tag == "equal":
-            continue
-        if i1 < i2 and "".join(orig_tokens[i1:i2]).isspace():
-            corr_span = "".join(corr_tokens[j1:j2])
-            if corr_span == "" or corr_span.isspace():
-                continue
-        changed += max(i2 - i1, j2 - j1)
-    return changed / len(orig_tokens)
+    corr_words = _WORD_RE.findall(corrected_text)
+    sm = difflib.SequenceMatcher(None, orig_words, corr_words, autojunk=False)
+    changed = sum(
+        max(i2 - i1, j2 - j1) for tag, i1, i2, j1, j2 in sm.get_opcodes() if tag != "equal"
+    )
+    return changed / len(orig_words)
