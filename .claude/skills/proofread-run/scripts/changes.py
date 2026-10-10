@@ -80,6 +80,9 @@ def main_cli() -> None:
     p.add_argument("--width", type=int, default=400, help="truncate each line (0 = never)")
     p.add_argument("--all", action="store_true", help="also print paragraphs with no revisions")
     args = p.parse_args()
+    # Windows pipes default to cp1252, which can't encode every character a
+    # manuscript may contain (and mangles curly quotes for downstream tools).
+    sys.stdout.reconfigure(encoding="utf-8")
 
     document = Document(args.docx)
     totals, authors = Counter(), Counter()
