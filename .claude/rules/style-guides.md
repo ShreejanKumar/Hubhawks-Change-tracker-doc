@@ -13,8 +13,11 @@ History: `C:/Users/kumar/Downloads/README.md` (local, not in the repo) §4.3, §
 ## Who decides what
 
 - The **user-selected variant alone** (British/American) decides: spelling variant (-ise/-ize,
-  -our/-or…), the quote-mark family, punctuation placement against the closing quote, and preterite
-  forms (BrE dreamt/learnt/burnt vs AmE -ed). These rules live **only in the system prompt**.
+  -our/-or…), punctuation placement against the closing quote, and preterite forms (BrE
+  dreamt/learnt/burnt vs AmE -ed). These rules live **only in the system prompt**.
+- The **quote-mark style** (single/double) is whatever the manuscript mostly uses, judged by Gemini
+  within each chunk (client decision, Oct 2026; never convert it). The variant default applies only
+  when there's no clear majority. Not done in code by the user's choice.
 - The **style guide** decides everything else: numbers, dates, citations, capitalisation of terms,
   abbreviations, italics, hyphenation and usage.
 - So the style guide `.txt` files must never state a spelling variant or a quote-mark rule. If a

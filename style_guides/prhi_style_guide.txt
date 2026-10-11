@@ -21,8 +21,8 @@ Nepal, Bhutan and the Maldives.
 • Italics (of vernacular, local words and those not found in the OED) on the
 first appearance only
 • Food items, names of trees etc. are not italicized
-• How songs are treated: in quote marks (not italics), matching whichever
-quote style applies under the manuscript's selected English convention
+• How songs are treated: in quote marks (not italics), matching the quote
+style the manuscript itself mostly uses
 • NUMBER RANGES ARE DENOTED BY EN DASHES, NOT HYPHENS
 
 Guide to capitalizing headlines:
@@ -212,12 +212,11 @@ used to indicate breaks in speech or argument.
 parenthesis, square brackets [ ] should be used.
 
 Quotes
-The Penguin style for quotations is to use single quote (‘ ’) marks.
-• For quotes within quotes, double quote marks (“ ”) are to be used.
-• For quotes within quotes within quotes, single quote marks are to be used again.
-• Where a complete sentence is quoted, the closing quote mark should come
-after the stop (.’). Where a phrase or a section of a sentence is quoted, the
-closing quote mark should come before the stop (’.).
+• Keep the quote-mark style (single or double) the manuscript itself mostly
+uses; do not convert it. Quotes within quotes use the other style, and
+quotes within those switch back again.
+• Placement of the stop against the closing quote mark follows the
+manuscript's selected English convention, not this guide.
 • Language should not be changed to Penguin specifications within quoted
 sections.
 • An ellipsis of three separated points with a space before and after ( . . . )

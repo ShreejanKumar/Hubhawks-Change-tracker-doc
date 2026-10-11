@@ -91,16 +91,24 @@ reading more than one word at a time:
   every word, including less common vocabulary — but only to words that are
   genuinely spelling variants of each other in the sense used; never change
   a word into a different word that happens to be spelled similarly.
-- Quote-mark family and the placement of terminal punctuation against the
-  closing quote mark, per the {variant} English convention: under British
-  English, primary quotations use single quote marks (‘ ’), a quote within
-  a quote uses double quote marks (“ ”), and a period or comma at the end
-  of a fully quoted sentence goes after the closing quote mark while one
-  ending a quoted phrase goes before it. Under American English, primary
-  quotations use double quote marks (“ ”), a quote within a quote uses
-  single quote marks (‘ ’), and a period or comma always goes before the
-  closing quote mark regardless of whether it is part of the quoted
-  material.
+- Quote-mark style: keep the style the manuscript already uses. Look at the
+  dialogue and quotations across all the paragraphs you were given, see
+  whether single (‘ ’) or double (“ ”) quote marks are used for them most
+  often, and make any primary quotation that uses the other style match
+  that majority; a quote within a quote uses the other style. Never convert
+  the manuscript's prevailing style to a different one. Only if the
+  paragraphs give no clear majority, use the {variant} English default:
+  single quote marks for British English, double for American English.
+- Placement of a period or comma against the closing quote mark, per the
+  {variant} English convention. Under British English, when a complete
+  sentence is quoted (including all dialogue), the period or comma goes
+  inside, before the closing quote mark (‘Stay there.’); when only a phrase
+  or part of a sentence is quoted, it goes outside, after the closing quote
+  mark (she called it ‘a ruse’.). Under American English, a period or comma
+  always goes inside, before the closing quote mark. Under both, dialogue
+  followed by a dialogue tag ends with a comma inside the closing quote
+  mark, never after it: ‘Stay there for a while,’ the tutor said — not
+  ‘Stay there for a while’, the tutor said.
 - Irregular verbs that take a different preterite/past-participle form
   between the two variants: under British English, prefer the traditional
   "-t" form (e.g. dreamt, learnt, burnt, spelt, spilt, leapt, smelt, knelt)
@@ -108,13 +116,14 @@ reading more than one word at a time:
   "-ed" form instead (dreamed, learned, burned, spelled, spilled, leaped,
   smelled, kneeled).
 
-For all of the above — spelling variant, quote-mark family and placement,
-and preterite verb forms — {variant} English as instructed here is
-authoritative and must be followed regardless of anything the STYLE GUIDE
-below says or implies about language convention (for example a stated
-preference for "British spellings" or for single quotation marks): these
-are matters of grammar/language convention, decided solely by which
-variant the user selected, never by the style guide. The STYLE GUIDE
+For all of the above — spelling variant, quote-mark style and placement,
+and preterite verb forms — the rules as instructed here are authoritative
+and must be followed regardless of anything the STYLE GUIDE below says or
+implies about language convention (for example a stated preference for
+"British spellings" or for single quotation marks): these are matters of
+grammar/language convention, decided by which variant the user selected
+(and, for quote-mark style, by the manuscript's own prevailing style),
+never by the style guide. The STYLE GUIDE
 governs everything outside of that — numbers, dates, citation and
 footnote style, capitalization of specific terms, abbreviations, italics
 conventions, hyphenation, and word-choice/usage preferences — apply it
