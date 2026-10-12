@@ -26,9 +26,15 @@ paths:
 
 ## Deploying
 
-The UI deploys from `main` on Streamlit Cloud. **The worker does not.** After changing any module the
-worker uses (`worker.py`, `main.py`, `gemini_client.py`, `chunking.py`, `docx_*.py`, `history_store.py`,
-`config.py`, `style_guides*`, `requirements.txt`), redeploy the job:
+The UI deploys from `main` on Streamlit Cloud. The worker deploys from `main` too, through Cloud Build
+trigger `hubhawks-worker-deploy` (us-central1, runs `cloudbuild.yaml` as `hubhawks-deployer@…`). It
+fires only when a push changes a worker file (`worker.py`, `main.py`, `gemini_client.py`, `chunking.py`,
+`docx_*.py`, `history_store.py`, `config.py`, `app_secrets.py`, `style_guides*`, `requirements.txt`,
+`Dockerfile`, `cloudbuild.yaml`). Check it with `gcloud builds list --region us-central1 --limit 3`.
+A push alone updates the worker; there is no separate deploy step. Add new worker modules to the
+trigger's `--included-files` as well as the `Dockerfile`.
+
+Manual deploy (from local files, e.g. to test before pushing):
 
 ```bash
 gcloud run jobs deploy hubhawks-worker --source . --region us-central1 \
@@ -38,7 +44,7 @@ gcloud run jobs deploy hubhawks-worker --source . --region us-central1 \
   --memory 2Gi --cpu 1 --task-timeout 3h --max-retries 0 --tasks 1 --quiet
 ```
 
-Deploy the worker **before** pushing app changes that depend on it. Runs already in progress keep the
+Streamlit redeploys in about a minute and the worker build takes a few minutes, so when an app change depends on a worker change, push the worker change first and wait for its build. Runs already in progress keep the
 image they started with.
 
 ## Image

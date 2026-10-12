@@ -1,0 +1,30 @@
+# Redeploys the Cloud Run Job worker on every push to main that touches a
+# worker module (filter is on the trigger). Builds from the GitHub checkout,
+# which never contains secrets (gitignored), with the same Dockerfile and the
+# same job settings as the manual deploy in .claude/rules/worker-and-infra.md.
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args: ["build", "-t", "${_IMAGE}:$COMMIT_SHA", "."]
+  - name: gcr.io/cloud-builders/docker
+    args: ["push", "${_IMAGE}:$COMMIT_SHA"]
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: gcloud
+    args:
+      - run
+      - jobs
+      - deploy
+      - hubhawks-worker
+      - --image=${_IMAGE}:$COMMIT_SHA
+      - --region=us-central1
+      - --service-account=hubhawks-app@$PROJECT_ID.iam.gserviceaccount.com
+      - --set-secrets=GEMINI_API_KEY=gemini-api-key:latest
+      - --memory=2Gi
+      - --cpu=1
+      - --task-timeout=3h
+      - --max-retries=0
+      - --tasks=1
+      - --quiet
+substitutions:
+  _IMAGE: us-central1-docker.pkg.dev/${PROJECT_ID}/cloud-run-source-deploy/hubhawks-worker
+options:
+  logging: CLOUD_LOGGING_ONLY

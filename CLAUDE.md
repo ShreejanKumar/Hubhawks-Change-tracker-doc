@@ -53,8 +53,8 @@ Proofread, never rewrite. No restructuring, no new content, no change of voice, 
   `conda run -n book streamlit run app.py`, or the skill script for a headless run.
 - Secrets: `.streamlit/secrets.toml` and `gcp-service-account.json`, both gitignored. Never read or print them.
 - UI deployed on Streamlit Community Cloud from `main`. Worker deployed separately as Cloud Run Job
-  `hubhawks-worker` (us-central1, same as Firestore and the bucket). A worker code change needs a
-  redeploy of the job, not just a push. See `.claude/rules/worker-and-infra.md`.
+  `hubhawks-worker` (us-central1, same as Firestore and the bucket). A push to `main` that touches a worker
+  file redeploys it via Cloud Build trigger `hubhawks-worker-deploy`. See `.claude/rules/worker-and-infra.md`.
 - `gcloud` and Docker are installed on this machine.
 
 ## Working conventions
