@@ -212,6 +212,18 @@ async def _call_gemini(
     )
 
     corrections: list[ParagraphCorrection] = response.parsed or []
+    if not corrections:
+        # A blocked or truncated reply parses to nothing and is otherwise
+        # indistinguishable from an id mismatch in the logs; record why so a
+        # "could not be checked" paragraph can be diagnosed after the run.
+        candidate = response.candidates[0] if response.candidates else None
+        logger.warning(
+            "Gemini returned no usable corrections for paragraph ids %d-%d: "
+            "finish_reason=%s, prompt_feedback=%s, text=%.300r",
+            paragraphs[0].id, paragraphs[-1].id,
+            candidate.finish_reason if candidate else None,
+            response.prompt_feedback, response.text if candidate else None,
+        )
     return {c.id: c.corrected_text for c in corrections}
 
 
@@ -301,6 +313,12 @@ async def correct_paragraphs(
 
     if set(result.keys()) == expected_ids:
         return result, set()
+    if result:
+        logger.warning(
+            "Gemini id mismatch for paragraph ids %d-%d: missing %s, unexpected %s",
+            min(expected_ids), max(expected_ids),
+            sorted(expected_ids - result.keys()), sorted(result.keys() - expected_ids),
+        )
 
     if len(paragraphs) == 1:
         pid = paragraphs[0].id
