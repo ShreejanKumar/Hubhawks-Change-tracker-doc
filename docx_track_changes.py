@@ -72,7 +72,7 @@ def make_id_counter(document) -> Iterator[int]:
     contain revisions)."""
     max_id = 0
     for el in document.element.body.iter():
-        if el.tag in (qn("w:ins"), qn("w:del"), qn("w:rPrChange")):
+        if el.tag in (qn("w:ins"), qn("w:del"), qn("w:rPrChange"), qn("w:pPrChange")):
             raw = el.get(qn("w:id"))
             if raw is not None:
                 try:

@@ -17,9 +17,10 @@ you touch the matching files.
 | `worker.py` | Cloud Run Job entry point: runs one queued run, reports status/progress/heartbeat to Firestore |
 | `job_launcher.py` | Starts a job execution for a run (`RUN_ID` env override) |
 | `app_secrets.py` | Secrets from env (worker) or `st.secrets` (app) |
-| `main.py` | `process_document`: extract → chunk → Gemini (concurrent) → guardrail → track changes |
+| `main.py` | `process_document`: extract → chunk → Gemini (concurrent) → consistency sweep → chapter numbers → guardrail → track changes |
 | `gemini_client.py` | System prompt, Gemini calls, retries, halve-and-retry |
 | `chunking.py` | Pack paragraphs into chunks (never splits a paragraph) |
+| `chapter_numbering.py` | Chapter heading numbers fixed against the table of contents (typed text or Word list numbering) |
 | `docx_extract.py` | Paragraph text + offset map back to the XML |
 | `docx_track_changes.py` | Diff and rebuild paragraph XML with revisions |
 | `history_store.py` | GCS + Firestore: run lifecycle (queued → running → done/failed) and history |
@@ -29,7 +30,9 @@ you touch the matching files.
 
 ## Product rule
 
-Proofread, never rewrite. No restructuring, no new content, no change of voice, no translating.
+Light copyedit and proofread (client decision, Oct 2026): fix errors, and repair sentences that are
+ungrammatical, incomplete or unclear with the smallest change that makes them correct. Never rephrase a
+correct sentence for style. No restructuring, no new content, no change of voice, no translating.
 
 ## Invariants (details in the rules files)
 
@@ -38,7 +41,8 @@ Proofread, never rewrite. No restructuring, no new content, no change of voice, 
 - "Failed to check" must never look like "no changes needed" (`failed_paragraphs` → red banner).
 - Only 429/5xx are retried. Every other API error fails fast.
 - BrE/AmE rules live in the system prompt, never in the style guides.
-- Valid OOXML: revision ids are unique and above existing ids. `w:rPrChange` is the last child of `w:rPr`.
+- Valid OOXML: revision ids are unique and above existing ids. `w:rPrChange` is the last child of `w:rPr`,
+  `w:pPrChange` the last child of `w:pPr`.
 - Proofreading never runs in the Streamlit script; it runs in the Cloud Run Job. A run must never
   vanish silently: every end state is `done`, `failed`, or shown as stale (no heartbeat for 10 min).
 - Runs proceed in parallel (no lock). `GEMINI_MAX_CONCURRENT_CHUNKS` (10) per run, all runs share one

@@ -13,7 +13,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # key must never end up in the image, whatever the ignore files say. The
 # worker authenticates as the job's service account, and its Gemini key is
 # mounted from Secret Manager as an env var.
-COPY app_secrets.py chunking.py config.py docx_extract.py docx_track_changes.py \
+COPY app_secrets.py chapter_numbering.py chunking.py config.py docx_extract.py docx_track_changes.py \
      gemini_client.py history_store.py main.py style_guides.py worker.py ./
 COPY style_guides/ ./style_guides/
 

@@ -48,6 +48,19 @@ Three passes in `process_document`:
 
 Every paragraph step is inside its own try/except. A failure adds it to `failed_ids` and the run continues.
 
+## Consistency sweep and acronyms (`main.py`)
+
+- Chunks can't see each other, so after the main pass `_consistency_rules` collects one-word
+  corrections that look like spelling (similarity >= `SWEEP_MIN_WORD_SIMILARITY`, not a plural or tense
+  change, one target only, made in >= `SWEEP_MIN_FIXED_SHARE` of the word's occurrences).
+  `_consistency_sweep` re-sends only the paragraphs still containing the old word, with the rules and
+  "make no other changes". Gemini decides each occurrence. A failed sweep call keeps the first-pass text.
+  On Prakash Shah: 50 paragraphs, 1 request.
+- Each chunk is told which acronyms already appeared before it (`_earlier_acronyms_note`), so the
+  style guide's "expand at first mention" lands on the real first mention.
+- `_curl_introduced_straight_quotes`: a straight quote Gemini introduces into a paragraph that had
+  none is curled in code.
+
 ## Guardrail
 
 - If more than `MAX_CHANGED_TOKEN_RATIO` (0.60, the user's choice) of the words changed, retry once with
@@ -58,7 +71,8 @@ Every paragraph step is inside its own try/except. A failure adds it to `failed_
 
 ## The system prompt
 
-- Proofread only. The prompt owns BrE/AmE conversion and the "read the whole sentence first; a
+- Light copyedit (client decision, Oct 2026): ungrammatical, incomplete or broken sentences are
+  repaired minimally; correct sentences are never rephrased. The prompt owns BrE/AmE conversion and the "read the whole sentence first; a
   valid-but-wrong word is worse than leaving it" rule. See `style-guides.md` for how variant rules
   and style guide rules split.
 - Prompt edits change output on every manuscript. Keep them minimal and targeted at the reported

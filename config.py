@@ -81,6 +81,25 @@ MAX_CHANGED_TOKEN_RATIO = 0.60
 # (each word plus its following space or punctuation mark).
 MIN_TOKENS_FOR_CHANGE_RATIO_GUARDRAIL = 5
 
+# Consistency sweep (main._consistency_sweep): a one-word correction made in
+# one chunk (utilize -> utilise, MOSSAD -> Mossad) is looked for in every
+# other paragraph and re-checked there, since a chunk can't see what another
+# chunk corrected (client review, Oct 2026: "only the first occurrence is
+# corrected"). Only spelling-like corrections become rules: the old and new
+# word must be at least this similar (difflib ratio, case-insensitive), which
+# keeps out grammar swaps like "the" -> "a" whose rightness depends on the
+# sentence. Gemini still decides each occurrence in context.
+SWEEP_MIN_WORD_SIMILARITY = 0.6
+SWEEP_MIN_WORD_LENGTH = 3
+# ...and Gemini must have made the correction in at least this share of the
+# word's occurrences. On Prakash Shah, grammar swaps (has -> had, get -> got)
+# were made once among hundreds of untouched occurrences and would have sent
+# 1,162 paragraphs back; variant fixes (utilize -> utilise) were made in most
+# places. 0.25 still catches a typo fixed once and missed up to three times.
+SWEEP_MIN_FIXED_SHARE = 0.25
+# Rules listed per sweep request; a chunk's paragraphs rarely need more.
+SWEEP_MAX_RULES_PER_REQUEST = 60
+
 STYLE_GUIDES = {
     "old_inhouse": {
         "label": "Old In-House Stylesheet",

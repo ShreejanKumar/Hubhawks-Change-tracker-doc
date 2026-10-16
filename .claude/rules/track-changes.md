@@ -38,6 +38,9 @@ History: `C:/Users/kumar/Downloads/README.md` (local, not in the repo) §2 "Trac
 
 - Revision `w:id`s come from `make_id_counter`: unique, and above every id already in the document.
 - `w:rPrChange` is the **last** child of `w:rPr` and contains a `w:rPr` with the prior properties.
+- `chapter_numbering.apply_list_fix` moves a mis-numbered chapter heading onto a copy of its list
+  (new `w:abstractNum` with a fresh `w:nsid`, new `w:num`) and records the old `w:pPr` in a
+  `w:pPrChange`, the last child of `w:pPr`. `make_id_counter` counts `w:pPrChange` ids too.
 - Output text passes through `sanitize_for_xml` (XML 1.0 valid characters only).
 - Italics: the model marks a span with one pair of `*…*`. `strip_italic_markers` removes them. A
   changed span gets italic inside its `w:ins`. Unchanged text that only needs italics gets a

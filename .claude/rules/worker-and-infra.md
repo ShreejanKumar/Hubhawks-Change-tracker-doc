@@ -28,7 +28,7 @@ paths:
 
 The UI deploys from `main` on Streamlit Cloud. The worker deploys from `main` too, through Cloud Build
 trigger `hubhawks-worker-deploy` (us-central1, runs `cloudbuild.yaml` as `hubhawks-deployer@…`). It
-fires only when a push changes a worker file (`worker.py`, `main.py`, `gemini_client.py`, `chunking.py`,
+fires only when a push changes a worker file (`worker.py`, `main.py`, `gemini_client.py`, `chunking.py`, `chapter_numbering.py`,
 `docx_*.py`, `history_store.py`, `config.py`, `app_secrets.py`, `style_guides*`, `requirements.txt`,
 `Dockerfile`, `cloudbuild.yaml`). Check it with `gcloud builds list --region us-central1 --limit 3`.
 A push alone updates the worker; there is no separate deploy step. Add new worker modules to the
