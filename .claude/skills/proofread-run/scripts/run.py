@@ -7,7 +7,7 @@ docx to .claude/runs/ and prints a compact JSON summary.
 COSTS MONEY: every run calls the paid Gemini API. Ask the user first.
 
     conda run -n book python .claude/skills/proofread-run/scripts/run.py <in.docx> \
-        [--variant British|American] [--guide old_inhouse|prhi] [--author NAME] [--out DIR]
+        [--variant British|American] [--guide old_inhouse] [--author NAME] [--out DIR]
 """
 import argparse
 import json

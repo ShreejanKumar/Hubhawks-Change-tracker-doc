@@ -20,10 +20,10 @@ Two scripts, both run from the repo root with the `book` conda env:
 ```bash
 # Real run (paid; 1–3 min for a full manuscript). Progress goes to stderr, JSON to stdout.
 conda run -n book python .claude/skills/proofread-run/scripts/run.py path/to/in.docx \
-  --variant American --guide prhi
+  --variant American
 
 # What changed? (first 40 changed paragraphs, lines cut at 400 chars)
-conda run -n book python .claude/skills/proofread-run/scripts/changes.py .claude/runs/in_American_prhi_tracked.docx
+conda run -n book python .claude/skills/proofread-run/scripts/changes.py .claude/runs/in_American_old_inhouse_tracked.docx
 
 # Narrow it
 ... changes.py out.docx --para 12 57          # these ids (also prints them if unchanged)
@@ -37,7 +37,7 @@ Marks: `[-deleted-]`, `{+inserted+}`, `{~formatting-only change (w:rPrChange)~}`
 | Option | Script | Values |
 |---|---|---|
 | `--variant` | run | `British` (default), `American` |
-| `--guide` | run | `old_inhouse` (default), `prhi` (keys of `config.STYLE_GUIDES`) |
+| `--guide` | run | `old_inhouse` (default; keys of `config.STYLE_GUIDES`) |
 | `--author` | run | revision author name (default `Claude test run`) |
 | `--out` | run | output folder (default `.claude/runs/`) |
 | `--para`, `--grep`, `--author` | changes | filters |

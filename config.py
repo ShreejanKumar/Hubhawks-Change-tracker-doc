@@ -86,10 +86,6 @@ STYLE_GUIDES = {
         "label": "Old In-House Stylesheet",
         "path": "style_guides/old_inhouse_stylesheet.txt",
     },
-    "prhi": {
-        "label": "PRHI Style Guide",
-        "path": "style_guides/prhi_style_guide.txt",
-    },
 }
 
 ENGLISH_VARIANTS = ["British", "American"]

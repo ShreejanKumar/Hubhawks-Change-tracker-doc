@@ -6,7 +6,7 @@ These rules apply to every task. They keep reads, runs and replies small.
 
 - Grep for the function or term first, then Read only that range (`offset`/`limit`). Files worth
   being careful with: `docx_track_changes.py` (~460 lines), `gemini_client.py` (~320, most of it the
-  prompt), `style_guides/prhi_style_guide.txt` (~600), `C:/Users/kumar/Downloads/README.md` (local, not in the repo) (~370).
+  prompt), `C:/Users/kumar/Downloads/README.md` (local, not in the repo) (~370).
 - Never read the PDFs, `.docx` files or secrets. A hook blocks it. To see what a `.docx` contains,
   use `.claude/skills/proofread-run/scripts/changes.py`.
 - Don't re-read a file after editing it. Don't read a file already read in this session unless it changed.

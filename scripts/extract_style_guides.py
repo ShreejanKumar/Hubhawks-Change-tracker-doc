@@ -1,4 +1,4 @@
-"""One-time dev script: extract the two style guide PDFs to plain text.
+"""One-time dev script: extract the style guide PDF to plain text.
 
 Not imported by the app at runtime. Run once, then hand-review the output
 files under style_guides/ before committing them.
@@ -16,7 +16,6 @@ OUT_DIR = ROOT / "style_guides"
 
 SOURCES = {
     "old_inhouse_stylesheet.txt": ROOT / "Old In House Stylesheet.pdf",
-    "prhi_style_guide.txt": ROOT / "PRHI Style Guide (1) (1).pdf",
 }
 
 
