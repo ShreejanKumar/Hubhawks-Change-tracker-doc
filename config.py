@@ -100,6 +100,13 @@ SWEEP_MIN_FIXED_SHARE = 0.25
 # Rules listed per sweep request; a chunk's paragraphs rarely need more.
 SWEEP_MAX_RULES_PER_REQUEST = 60
 
+# Words the author set in italics are sent to Gemini once per run to pick
+# out the uncommon non-English ones (italic at first use only, roman after).
+# Only short italic stretches count, so titles and emphasised sentences
+# aren't candidates; the cap bounds that one request.
+FOREIGN_TERM_MAX_WORDS = 3
+FOREIGN_TERM_MAX_CANDIDATES = 300
+
 STYLE_GUIDES = {
     "old_inhouse": {
         "label": "Old In-House Stylesheet",

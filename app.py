@@ -110,6 +110,8 @@ def status_label(run: dict) -> str:
     stats = f"{run.get('edited_paragraphs', 0)}/{run.get('total_paragraphs', 0)} edited"
     if run.get("flagged_count"):
         stats += f" · {run['flagged_count']} flagged"
+    if run.get("review_comments"):
+        stats += f" · {run['review_comments']} comments"
     return stats
 
 
@@ -213,6 +215,11 @@ if selected_run_id:
         st.success(
             f"{run['edited_paragraphs']} of {run['total_paragraphs']} paragraphs "
             "received tracked changes."
+            + (
+                f" {run['review_comments']} possible issue(s) that need an editor's judgement "
+                "(tense, sentence fragments, wrong words) are left as Word comments."
+                if run.get("review_comments") else ""
+            )
         )
         render_failure_notice(run.get("failed_paragraphs") or [], run["total_paragraphs"])
 

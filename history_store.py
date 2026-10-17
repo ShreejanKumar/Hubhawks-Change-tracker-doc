@@ -220,5 +220,6 @@ def complete_run(run_id: str, gcs_path: str, result: ProcessResult) -> None:
             "flagged_count": len(result.flagged_paragraphs),
             "flagged": [asdict(f) for f in result.flagged_paragraphs],
             "failed_paragraphs": result.failed_paragraphs,
+            "review_comments": result.review_comments,
         },
     )

@@ -10,6 +10,7 @@ import difflib
 import io
 import logging
 import re
+import unicodedata
 from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -26,6 +27,8 @@ import style_guides
 from config import (
     GEMINI_MAX_CONCURRENT_CHUNKS,
     MAX_CHANGED_TOKEN_RATIO,
+    FOREIGN_TERM_MAX_CANDIDATES,
+    FOREIGN_TERM_MAX_WORDS,
     MIN_TOKENS_FOR_CHANGE_RATIO_GUARDRAIL,
     SWEEP_MAX_RULES_PER_REQUEST,
     SWEEP_MIN_FIXED_SHARE,
@@ -47,8 +50,8 @@ SWEEP_INSTRUCTION = (
     "error in the same sense, and leave an occurrence unchanged where the "
     "word is correct as it stands (a different sense, a name, a quotation, "
     "or non-English text). Make NO other changes of any kind. A span wrapped "
-    "in a pair of asterisks is already marked for italics: keep those "
-    "asterisks exactly where they are.\n\nCorrections made elsewhere:\n"
+    "in a pair of asterisks or tildes is already marked for italics: keep "
+    "those markers exactly where they are.\n\nCorrections made elsewhere:\n"
 )
 
 _WORD_RE = re.compile(r"\w+(?:['’]\w+)*")
@@ -242,6 +245,248 @@ def _curl_introduced_straight_quotes(original: str, corrected: str) -> str:
     return corrected
 
 
+_DIFF_TOKEN_RE = re.compile(r"\w+|\s+|[^\w\s]")
+
+
+def _is_corrupted_word(old: str, new: str) -> bool:
+    """A word with an accented or other non-ASCII letter (fiancé, café,
+    Zoë) that came back with its special character lost or mangled: no
+    non-ASCII letter left, or a digit or backslash it never had (on a client
+    manuscript, Oct 2026, "fiancé" came back as "fiance9e")."""
+    if old.isascii() or unicodedata.normalize("NFC", old) == unicodedata.normalize("NFC", new):
+        return False
+    gained = lambda ch: any(ch(c) for c in new) and not any(ch(c) for c in old)
+    return new.isascii() or gained(str.isdigit) or "\\" in new
+
+
+def _restore_corrupted_words(original: str, corrected: str) -> str:
+    """Put back every word whose special characters Gemini corrupted. A
+    real fix to such a word (fiancè -> fiancé) keeps its non-ASCII letter
+    and is left alone."""
+    old_tokens, new_tokens = _DIFF_TOKEN_RE.findall(original), _DIFF_TOKEN_RE.findall(corrected)
+    matcher = difflib.SequenceMatcher(a=old_tokens, b=new_tokens, autojunk=False)
+    out: list[str] = []
+    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+        old, new = "".join(old_tokens[i1:i2]), "".join(new_tokens[j1:j2])
+        corrupted = tag == "replace" and i2 - i1 == 1 and old[0].isalnum() and _is_corrupted_word(old, new)
+        out.append(old if corrupted else new)
+    return "".join(out)
+
+
+# Quote marks. The style (single or double) is set once for the whole
+# manuscript by counting the opening quote marks of each kind in the
+# original text, and every quotation is then converted to it in code:
+# chunks can't see each other, so leaving it to Gemini gave a different
+# majority in different chunks. Opening marks are counted because a closing
+# single quote looks exactly like an apostrophe.
+_QUOTE_OPENERS_BEFORE = " \t\n([{—–-/"
+# A ’ that can only be a closing quote: after punctuation, or before
+# punctuation or the end of the paragraph.
+_LATER_SINGLE_CLOSE_RE = re.compile(r"[,.;:!?—–]’|’(?=[,.;:!?—–]|\s*$)")
+
+
+def _quote_marks(text: str) -> list[tuple[int, str, bool]]:
+    """(offset, "double" | "single", is_opening) for every quotation mark
+    in `text`, curly or straight, skipping apostrophes (it’s, ’90s, the
+    students’ books outside a single quotation)."""
+    marks: list[tuple[int, str, bool]] = []
+    single_open = 0
+    for k, ch in enumerate(text):
+        before = text[k - 1] if k else " "
+        after = text[k + 1] if k + 1 < len(text) else " "
+        opening_position = before in _QUOTE_OPENERS_BEFORE or before in "“‘\"'"
+        if ch in "“”\"":
+            is_open = ch == "“" or (ch == '"' and opening_position)
+            marks.append((k, "double", is_open))
+        elif ch in "‘'" and opening_position and not after.isspace() and not after.isdigit():
+            marks.append((k, "single", True))
+            single_open += 1
+        elif ch in "’'" and single_open and not before.isspace() and not after.isalnum():
+            if before.isalpha() and after == " " and _LATER_SINGLE_CLOSE_RE.search(text, k + 1):
+                # ‘The students’ books,’ he said: a plural possessive inside
+                # the quotation, which closes at the later ’.
+                continue
+            marks.append((k, "single", False))
+            single_open -= 1
+    return marks
+
+
+def _quote_style(originals: dict[int, str], variant: str) -> str:
+    counts = Counter(kind for text in originals.values() for _, kind, is_open in _quote_marks(text) if is_open)
+    if counts["single"] != counts["double"]:
+        return "single" if counts["single"] > counts["double"] else "double"
+    return "single" if variant == "British" else "double"
+
+
+_QUOTE_CHARS = {("double", True): "“", ("double", False): "”", ("single", True): "‘", ("single", False): "’"}
+
+
+def _convert_quotes(text: str, style: str) -> str:
+    """Every quotation in `style`, a quote within a quote in the other one.
+    A paragraph whose marks don't pair up (a closing mark of one kind while
+    a quotation of the other kind is open) is left as it is. An opening mark
+    left unclosed is converted only where it opens the paragraph (dialogue
+    running on into the next paragraph); anywhere else it is more likely a
+    mistyped apostrophe (‘em, ‘cause) and is left alone."""
+    other = "single" if style == "double" else "double"
+    chars = list(text)
+    stack: list[tuple[str, int, str]] = []  # (kind, offset, original char)
+    for k, kind, is_open in _quote_marks(text):
+        if is_open:
+            depth = len(stack)
+            stack.append((kind, k, text[k]))
+        else:
+            if stack and stack[-1][0] != kind:
+                return text
+            if stack:
+                stack.pop()
+            depth = len(stack)
+        chars[k] = _QUOTE_CHARS[(style if depth % 2 == 0 else other, is_open)]
+    paragraph_start = len(text) - len(text.lstrip())
+    for _, k, ch in stack:
+        if k != paragraph_start:
+            chars[k] = ch
+    return "".join(chars)
+
+
+# Em dashes between two words, spaced on either side or not at all
+# ("Morals —teachers of life— can"). Dashes against a quote mark or at a
+# paragraph edge (dialogue breaking off) are left alone.
+_EM_DASH_RE = re.compile(r"(?<=[\w),.;:!?])( ?)—( ?)(?=[\w(])")
+
+
+def _dash_style(originals: dict[int, str]) -> str:
+    """The manuscript's own majority em dash spacing, "spaced" or "closed"
+    (closed when tied)."""
+    counts = Counter(
+        "spaced" if m.group(1) and m.group(2) else "closed"
+        for text in originals.values()
+        for m in _EM_DASH_RE.finditer(text)
+        if bool(m.group(1)) == bool(m.group(2))
+    )
+    return "spaced" if counts["spaced"] > counts["closed"] else "closed"
+
+
+def _normalise_dashes(text: str, style: str) -> str:
+    return _EM_DASH_RE.sub(" — " if style == "spaced" else "—", text)
+
+
+def _first_use_italics(
+    texts: dict[int, str], terms: set[str], skip_ids: set[int]
+) -> dict[int, list[tuple[int, int]]]:
+    """The style guide italicises an uncommon non-English word at its first
+    use only. Gemini marks every use it sees, but each chunk sees only part
+    of the manuscript, so the code picks the first: for every marked word,
+    its earliest whole-word occurrence in the manuscript (marked there or
+    not) gets the italics and every later one stays roman. A first use in
+    a paragraph that couldn't be checked gets none, so no later use is
+    wrongly italicised in its place."""
+    kept: dict[int, list[tuple[int, int]]] = {}
+    for term in sorted(terms):
+        pattern = re.compile(rf"(?<!\w){re.escape(term)}(?!\w)", re.IGNORECASE)
+        for i in sorted(texts):
+            m = pattern.search(texts[i])
+            if m:
+                if i not in skip_ids:
+                    kept.setdefault(i, []).append(m.span())
+                break
+    return kept
+
+
+def _italic_mask(extraction: de.ParagraphExtraction) -> list[bool]:
+    """Per character of the paragraph text: is it italic in the manuscript."""
+    mask = [False] * len(extraction.text)
+    for it in extraction.items:
+        if it.kind == de.TEXT and tc.rpr_has_italic(it.rpr):
+            mask[it.start:it.end] = [True] * (it.end - it.start)
+    return mask
+
+
+def _italic_segments(text: str, mask: list[bool]) -> list[tuple[int, int]]:
+    segments, k = [], 0
+    while k < len(text):
+        if not mask[k]:
+            k += 1
+            continue
+        start = k
+        while k < len(text) and mask[k]:
+            k += 1
+        segments.append((start, k))
+    return segments
+
+
+_TERM_WORD_RE = re.compile(r"[^\W\d_]+(?:[-’'][^\W\d_]+)*")
+
+
+def _italic_candidates(originals: dict[int, str], masks: dict[int, list[bool]]) -> dict[str, str]:
+    """Words the author italicised in short italic stretches (up to
+    FOREIGN_TERM_MAX_WORDS words, so not titles or emphasised sentences),
+    most frequent first: term -> an example paragraph. Gemini can't see
+    formatting, so these are sent to it to pick out the non-English ones."""
+    counts: Counter[str] = Counter()
+    examples: dict[str, str] = {}
+    for i in sorted(originals):
+        text = originals[i]
+        for a, b in _italic_segments(text, masks[i]):
+            words = _TERM_WORD_RE.findall(text[a:b])
+            if not words or len(words) > FOREIGN_TERM_MAX_WORDS:
+                continue
+            for word in words:
+                key = word.casefold()
+                counts[key] += 1
+                examples.setdefault(key, text[max(0, a - 150):b + 150])
+    return {t: examples[t] for t, _ in counts.most_common(FOREIGN_TERM_MAX_CANDIDATES)}
+
+
+def _roman_later_uses(
+    originals: dict[int, str], masks: dict[int, list[bool]], terms: set[str], skip_ids: set[int]
+) -> dict[int, list[tuple[int, int]]]:
+    """Ranges of the original text to take out of italics: every use of a
+    non-English word after its first one, where the author set it in
+    italics on its own (an italic stretch holding only that word, so a
+    title or an italicised sentence containing it is left alone)."""
+    roman: dict[int, list[tuple[int, int]]] = {}
+    for term in terms:
+        pattern = re.compile(rf"(?<!\w){re.escape(term)}(?!\w)", re.IGNORECASE)
+        seen_first = False
+        for i in sorted(originals):
+            text, mask = originals[i], masks[i]
+            for m in pattern.finditer(text):
+                if not seen_first:
+                    seen_first = True
+                    continue
+                if i in skip_ids or not all(mask[m.start():m.end()]):
+                    continue
+                a, b = m.start(), m.end()
+                while a > 0 and mask[a - 1]:
+                    a -= 1
+                while b < len(text) and mask[b]:
+                    b += 1
+                if [w.casefold() for w in _TERM_WORD_RE.findall(text[a:b])] == _TERM_WORD_RE.findall(term):
+                    roman.setdefault(i, []).append((m.start(), m.end()))
+    return {i: sorted(spans) for i, spans in roman.items()}
+
+
+async def _classify_italic_candidates(candidates: dict[str, str], style_guide_text: str) -> list[str]:
+    client = gemini_client.new_client()
+    try:
+        return await gemini_client.find_foreign_terms(client, candidates, style_guide_text)
+    finally:
+        await client.aio.aclose()
+
+
+def _postprocess(original: str, corrected: str, quote_style: str, dash_style: str) -> str:
+    """Code-level fixes to Gemini's text, before the italic markers are
+    stripped (none of them touch a * or ~)."""
+    corrected = _restore_corrupted_words(original, tc.sanitize_for_xml(corrected))
+    corrected = _curl_introduced_straight_quotes(original, corrected)
+    corrected = _normalise_dashes(_convert_quotes(corrected, quote_style), dash_style)
+    return _restore_edge_whitespace(original, corrected)
+
+
+_FLAG_LABELS = {"tense": "Tense", "fragment": "Sentence fragment", "word_choice": "Word choice"}
+
+
 @dataclass
 class FlaggedParagraph:
     paragraph_id: int
@@ -257,6 +502,7 @@ class ProcessResult:
     edited_paragraphs: int
     flagged_paragraphs: list[FlaggedParagraph] = field(default_factory=list)
     failed_paragraphs: list[int] = field(default_factory=list)
+    review_comments: int = 0
 
 
 ProgressCallback = Callable[[int, int], None]
@@ -275,6 +521,7 @@ async def _guardrail_retries(
     texts_by_id: dict[int, str],
     style_guide_text: str,
     variant: str,
+    flags_out: dict[int, list[gemini_client.ReviewFlag]],
 ) -> dict[int, tuple[dict[int, str], set[int]] | BaseException]:
     """One "make fewer changes" retry per paragraph, concurrently (bounded
     like the chunks) over one shared client. Each paragraph is still its own
@@ -292,6 +539,7 @@ async def _guardrail_retries(
                 style_guide_text,
                 variant,
                 extra_instruction=GUARDRAIL_RETRY_INSTRUCTION,
+                flags_out=flags_out,
             )
 
     try:
@@ -310,6 +558,7 @@ async def _correct_all_chunks(
     variant: str,
     progress_callback: Optional[ProgressCallback],
     acronym_first_mentions: dict[str, int],
+    flags_out: dict[int, list[gemini_client.ReviewFlag]],
 ) -> tuple[dict[int, str], set[int]]:
     """Corrects every chunk concurrently (bounded by
     GEMINI_MAX_CONCURRENT_CHUNKS), sharing one Gemini client across them for
@@ -333,7 +582,7 @@ async def _correct_all_chunks(
         note = _earlier_acronyms_note(chunk, acronym_first_mentions)
         async with semaphore:
             chunk_result, chunk_failed = await gemini_client.correct_paragraphs(
-                client, chunk, style_guide_text, variant, extra_instruction=note
+                client, chunk, style_guide_text, variant, extra_instruction=note, flags_out=flags_out
             )
         done += 1
         if progress_callback:
@@ -379,9 +628,11 @@ def process_document(
     chunks = chunking.build_chunks(indexed)
     originals = {i: ext.text for i, ext in extractions.items() if ext.text}
 
+    review_flags: dict[int, list[gemini_client.ReviewFlag]] = {}
     corrected_by_id, failed_ids = asyncio.run(
         _correct_all_chunks(
-            chunks, style_guide_text, variant, progress_callback, _acronym_first_mentions(originals)
+            chunks, style_guide_text, variant, progress_callback, _acronym_first_mentions(originals),
+            review_flags,
         )
     )
 
@@ -403,6 +654,11 @@ def process_document(
             i = fix.paragraph_id
             corrected_by_id[i] = chapter_numbering.renumber_text(corrected_by_id.get(i, originals[i]), fix.expected)
 
+    # One quote-mark style and one em dash spacing for the whole manuscript,
+    # from the original text.
+    quote_style, dash_style = _quote_style(originals, variant), _dash_style(originals)
+    logger.info("Quote marks: %s; em dashes: %s", quote_style, dash_style)
+
     revision_date = datetime.now(timezone.utc).isoformat()
     id_gen = tc.make_id_counter(document)
 
@@ -412,16 +668,15 @@ def process_document(
     # Pass 1: prepare each paragraph's correction and find the ones whose
     # change ratio trips the guardrail.
     prepared: dict[int, _PreparedCorrection] = {}
+    foreign_terms: set[str] = set()
     for i in range(len(all_paragraphs)):
         extraction = extractions[i]
         if not extraction.text or i not in corrected_by_id:
             continue
         try:
-            raw_corrected_text = _restore_edge_whitespace(
-                extraction.text,
-                _curl_introduced_straight_quotes(extraction.text, tc.sanitize_for_xml(corrected_by_id[i])),
-            )
-            corrected_text, italic_spans = tc.strip_italic_markers(raw_corrected_text)
+            raw_corrected_text = _postprocess(extraction.text, corrected_by_id[i], quote_style, dash_style)
+            corrected_text, italic_spans, foreign_spans = tc.strip_italic_markers(raw_corrected_text)
+            foreign_terms |= {corrected_text[s:e].casefold() for s, e in foreign_spans}
             if corrected_text == extraction.text and not italic_spans:
                 continue
             ratio = tc.changed_token_ratio(extraction, corrected_text)
@@ -440,18 +695,20 @@ def process_document(
     # chunks themselves. Each retry sends exactly the same request as before,
     # so this changes wall-clock time only, never the corrections.
     retry_ids = [i for i, p in prepared.items() if p.needs_retry]
+    retry_flags: dict[int, list[gemini_client.ReviewFlag]] = {}
     retry_outcomes = (
         asyncio.run(_guardrail_retries(
-            {i: extractions[i].text for i in retry_ids}, style_guide_text, variant
+            {i: extractions[i].text for i in retry_ids}, style_guide_text, variant, retry_flags
         ))
         if retry_ids
         else {}
     )
 
-    # Pass 3: pick the less-changed version where retried, flag what still
-    # changes too much, and inject the tracked changes.
+    # Pass 3: pick the less-changed version where retried and flag what
+    # still changes too much.
+    finals: dict[int, tuple[str, list[tuple[int, int]]]] = {}
     for i, prep in prepared.items():
-        paragraph, extraction = all_paragraphs[i], extractions[i]
+        extraction = extractions[i]
         try:
             corrected_text, italic_spans, ratio = prep.corrected_text, prep.italic_spans, prep.ratio
             if prep.needs_retry:
@@ -460,24 +717,56 @@ def process_document(
                     raise outcome
                 retry_result, retry_failed = outcome
                 failed_ids |= retry_failed
-                raw_retried_text = _restore_edge_whitespace(
-                    extraction.text,
-                    _curl_introduced_straight_quotes(
-                        extraction.text, tc.sanitize_for_xml(retry_result.get(i, prep.raw_corrected_text))
-                    ),
+                raw_retried_text = _postprocess(
+                    extraction.text, retry_result.get(i, prep.raw_corrected_text), quote_style, dash_style
                 )
-                retried_text, retried_spans = tc.strip_italic_markers(raw_retried_text)
+                retried_text, retried_spans, retried_foreign = tc.strip_italic_markers(raw_retried_text)
+                foreign_terms |= {retried_text[s:e].casefold() for s, e in retried_foreign}
                 retried_ratio = tc.changed_token_ratio(extraction, retried_text)
                 if retried_ratio <= ratio:
                     corrected_text, ratio, italic_spans = retried_text, retried_ratio, retried_spans
+                    review_flags[i] = retry_flags.get(i, [])
                 if ratio > MAX_CHANGED_TOKEN_RATIO:
                     flagged.append(FlaggedParagraph(i, extraction.text, corrected_text, ratio))
+            finals[i] = (corrected_text, italic_spans)
+        except Exception:
+            logger.exception("Failed to choose correction for paragraph %d; left unchanged", i)
+            failed_ids.add(i)
 
-            if corrected_text == extraction.text and not italic_spans:
+    # Non-English words: italic at their first use in the manuscript only,
+    # roman after that. Gemini marks the ones it spots; the words the author
+    # italicised are judged separately, since Gemini can't see formatting.
+    masks = {i: _italic_mask(extractions[i]) for i in originals}
+    candidates = _italic_candidates(originals, masks)
+    if candidates:
+        try:
+            classified = asyncio.run(_classify_italic_candidates(candidates, style_guide_text))
+            logger.info("Author-italicised non-English words: %s", classified)
+            foreign_terms |= set(classified)
+        except Exception:
+            logger.exception("Couldn't classify the author's italicised words; their later uses keep italics")
+    final_texts = {i: finals[i][0] if i in finals else text for i, text in originals.items()}
+    for i, spans in _first_use_italics(final_texts, foreign_terms, failed_ids).items():
+        corrected_text, italic_spans = finals.get(i, (originals[i], []))
+        spans = [(s, e) for s, e in spans if all(e <= s2 or s >= e2 for s2, e2 in italic_spans)]
+        if corrected_text == originals[i]:
+            # Already italic in the manuscript: nothing to change.
+            spans = [(s, e) for s, e in spans if not all(masks[i][s:e])]
+        if spans:
+            finals[i] = (corrected_text, sorted(italic_spans + spans))
+    roman_by_id = _roman_later_uses(originals, masks, foreign_terms, failed_ids)
+
+    # Pass 4: inject the tracked changes.
+    for i in sorted(set(finals) | set(roman_by_id)):
+        paragraph, extraction = all_paragraphs[i], extractions[i]
+        corrected_text, italic_spans = finals.get(i, (extraction.text, []))
+        roman_spans = roman_by_id.get(i, [])
+        try:
+            if corrected_text == extraction.text and not italic_spans and not roman_spans:
                 continue
 
             tc.apply_track_changes(
-                paragraph, extraction, corrected_text, author, revision_date, id_gen, italic_spans
+                paragraph, extraction, corrected_text, author, revision_date, id_gen, italic_spans, roman_spans
             )
             edited_ids.add(i)
         except Exception:
@@ -487,6 +776,23 @@ def process_document(
             # corrections — isolate it as a failure and keep going.
             logger.exception("Failed to apply track changes to paragraph %d; left unchanged", i)
             failed_ids.add(i)
+
+    # Issues Gemini flagged but didn't correct become Word comments, after
+    # the tracked changes so they anchor on the paragraph's final text.
+    review_comments = 0
+    for i in sorted(review_flags):
+        if i in failed_ids or not originals.get(i):
+            continue
+        for flag in review_flags[i]:
+            try:
+                label = _FLAG_LABELS.get(flag.category, "Review")
+                tc.add_review_comment(
+                    document, all_paragraphs[i], flag.quote.strip(), f"{label}: {flag.comment.strip()}",
+                    author, next(id_gen),
+                )
+                review_comments += 1
+            except Exception:
+                logger.exception("Failed to add a review comment to paragraph %d", i)
 
     for fix in chapter_fixes:
         if fix.typed:
@@ -506,4 +812,5 @@ def process_document(
         edited_paragraphs=len(edited_ids),
         flagged_paragraphs=flagged,
         failed_paragraphs=sorted(failed_ids),
+        review_comments=review_comments,
     )

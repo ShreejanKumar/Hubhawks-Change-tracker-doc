@@ -24,7 +24,7 @@ History: `C:/Users/kumar/Downloads/README.md` (local, not in the repo) §2 "Trac
 
 - Token diff (`\s+|\w+|[^\w\s]`, `SequenceMatcher(autojunk=False)`), mapped to character offsets.
 - `_suppress_respacing_opcodes`: a change that only resizes whitespace becomes "equal" (it would be
-  an invisible revision). Inserting a space where there was none is kept.
+  an invisible revision). Inserting a space where there was none, or removing one outright, is kept.
 - `changed_token_ratio` / `token_count` (the guardrail) count **words only** (`\w+`), not the diff
   tokens. Whitespace tokens almost always align, which made a full rewrite score only ~0.5.
 - `_clip_opcodes`: any edit that touches a protected range is dropped for its whole span. This is
@@ -42,9 +42,19 @@ History: `C:/Users/kumar/Downloads/README.md` (local, not in the repo) §2 "Trac
   (new `w:abstractNum` with a fresh `w:nsid`, new `w:num`) and records the old `w:pPr` in a
   `w:pPrChange`, the last child of `w:pPr`. `make_id_counter` counts `w:pPrChange` ids too.
 - Output text passes through `sanitize_for_xml` (XML 1.0 valid characters only).
-- Italics: the model marks a span with one pair of `*…*`. `strip_italic_markers` removes them. A
+- Italics: the model marks a span with one pair of `*…*` (always italic) or `~…~` (non-English word,
+  italic at first use only; returned separately). `strip_italic_markers` removes both. A
   changed span gets italic inside its `w:ins`. Unchanged text that only needs italics gets a
-  `w:rPrChange`.
+  `w:rPrChange`. `roman_spans` (original-text offsets) do the reverse: unchanged italic text loses
+  `w:i`/`w:iCs`, recorded in a `w:rPrChange`.
+
+## Review comments
+
+`add_review_comment` runs after `apply_track_changes`. It finds the quote in the paragraph's visible
+text (deletions left out), splits a plain run where the quote starts or ends mid-run, and wraps it
+in `w:commentRangeStart`/`End` plus a `w:commentReference` run. Quote not found → the whole paragraph,
+with the quote named in the comment. Comment ids come from `make_id_counter`, which counts existing
+`w:commentRangeStart` ids.
 
 ## Testing
 

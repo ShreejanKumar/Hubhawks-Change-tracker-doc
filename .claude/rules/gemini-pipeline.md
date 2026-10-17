@@ -38,13 +38,16 @@ History: `C:/Users/kumar/Downloads/README.md` (local, not in the repo) §4.5, §
 
 ## Per-paragraph post-processing (`main.py`)
 
-Three passes in `process_document`:
-1. Per paragraph: `sanitize_for_xml` → `_restore_edge_whitespace` → `strip_italic_markers` →
-   `changed_token_ratio` → decide whether the guardrail applies.
+Passes in `process_document`:
+1. Per paragraph: `_postprocess` (`sanitize_for_xml` → `_restore_corrupted_words` →
+   `_curl_introduced_straight_quotes` → `_convert_quotes` → `_normalise_dashes` →
+   `_restore_edge_whitespace`) → `strip_italic_markers` → `changed_token_ratio` → decide whether the
+   guardrail applies.
 2. All guardrail retries **concurrently** (`_guardrail_retries`, same semaphore cap, one
    single-paragraph request each, exceptions returned per paragraph). They used to run serially,
    about 5 minutes on `book 3`.
-3. Per paragraph, in order: pick the less-changed version, flag, then `apply_track_changes`.
+3. Per paragraph: pick the less-changed version and flag. Then `_first_use_italics`, then
+   `apply_track_changes` for every paragraph.
 
 Every paragraph step is inside its own try/except. A failure adds it to `failed_ids` and the run continues.
 
@@ -60,6 +63,31 @@ Every paragraph step is inside its own try/except. A failure adds it to `failed_
   style guide's "expand at first mention" lands on the real first mention.
 - `_curl_introduced_straight_quotes`: a straight quote Gemini introduces into a paragraph that had
   none is curled in code.
+- Document-wide typography, decided from the original text before any paragraph is processed:
+  quote style (`_quote_style`, see `style-guides.md`) and em dash spacing between words
+  (`_dash_style`: spaced or closed, majority wins, closed on a tie).
+- Non-English words: Gemini wraps an uncommon one in `~…~` at **every** use; `_first_use_italics`
+  italicises its earliest whole-word occurrence in the manuscript (marked there or not) and no other.
+  A first use in a failed paragraph means no italics anywhere.
+- Author italics: Gemini can't see formatting, so `_italic_candidates` collects the words the author
+  italicised (stretches of <= `FOREIGN_TERM_MAX_WORDS` words, top `FOREIGN_TERM_MAX_CANDIDATES`) and
+  one `gemini_client.find_foreign_terms` call per run picks the non-English ones. Those join the `~`
+  terms. `_roman_later_uses` takes the author's italics off every later use (tracked `w:rPrChange`),
+  only where the italic stretch is that word alone, so titles and italic sentences keep theirs.
+  A failed classification call only means later uses keep their italics.
+- `_restore_corrupted_words`: a word with a non-ASCII letter that comes back ASCII-only or with a new
+  digit/backslash (fiancé → fiance9e) is put back. The payload is sent with `ensure_ascii=False`
+  for the same reason: Gemini used to see `\u00e9` escapes.
+
+## Review flags (`ReviewFlag`, client rules Oct 2026)
+
+- Tense shifts within a scene, sentence fragments and wrong-word/word-class errors follow "detect →
+  assess context → correct only when confident". Confident fixes are tracked changes; anything else
+  comes back in the paragraph's `flags` (`category`, `quote`, `comment`) and becomes a Word comment
+  (`tc.add_review_comment`), never a guessed edit.
+- `correct_paragraphs(..., flags_out=)` collects them. Main pass and guardrail retry (when the
+  retried version is kept) only; sweep flags are ignored. Failed paragraphs get none.
+- Count: `ProcessResult.review_comments` → run doc `review_comments` → shown in the app.
 
 ## Guardrail
 

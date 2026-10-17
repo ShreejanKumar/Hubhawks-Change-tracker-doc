@@ -62,17 +62,21 @@ def sanitize_for_xml(text: str) -> str:
 
 # Gemini has no way to express italics in a plain-text field, so it marks a
 # span that needs italic formatting (e.g. a book/poem title) by wrapping it
-# in a single pair of asterisks. See strip_italic_markers().
-_ITALIC_MARKER_RE = re.compile(r"\*([^*\n]+)\*")
+# in a single pair of asterisks, and an uncommon non-English word in a pair
+# of tildes (italic at its first use in the manuscript only, decided by
+# main.py). See strip_italic_markers(). The tilde form must start with a
+# letter so "~50 to ~60" in the text is never taken for a marker.
+_ITALIC_MARKER_RE = re.compile(r"\*([^*\n]+)\*|~([^\W\d_][^~\n]*?)~")
 
 
 def make_id_counter(document) -> Iterator[int]:
     """A w:id counter guaranteed to start above any id already used by
-    tracked changes present in the document (handles documents that already
-    contain revisions)."""
+    tracked changes or comments present in the document (handles documents
+    that already contain revisions). Review comments take their ids from it
+    too, so no annotation id is ever shared."""
     max_id = 0
     for el in document.element.body.iter():
-        if el.tag in (qn("w:ins"), qn("w:del"), qn("w:rPrChange"), qn("w:pPrChange")):
+        if el.tag in (qn("w:ins"), qn("w:del"), qn("w:rPrChange"), qn("w:pPrChange"), qn("w:commentRangeStart")):
             raw = el.get(qn("w:id"))
             if raw is not None:
                 try:
@@ -82,28 +86,30 @@ def make_id_counter(document) -> Iterator[int]:
     return count(max_id + 1)
 
 
-def strip_italic_markers(text: str) -> tuple[str, list[tuple[int, int]]]:
-    """Remove Gemini's asterisk italic markers from `text` and return the
-    clean text plus the character ranges (offsets into the clean text) that
-    should be rendered in italics. Keeps the asterisks themselves from ever
-    reaching the document as literal characters."""
-    if "*" not in text:
-        return text, []
+def strip_italic_markers(text: str) -> tuple[str, list[tuple[int, int]], list[tuple[int, int]]]:
+    """Remove Gemini's italic markers from `text` and return the clean text,
+    the character ranges (offsets into the clean text) marked with asterisks
+    (always italic), and those marked with tildes (non-English words, italic
+    only at their first use in the manuscript). Keeps the markers themselves
+    from ever reaching the document as literal characters."""
+    if "*" not in text and "~" not in text:
+        return text, [], []
 
     clean_parts: list[str] = []
     spans: list[tuple[int, int]] = []
+    foreign_spans: list[tuple[int, int]] = []
     pos = 0
     out_len = 0
     for m in _ITALIC_MARKER_RE.finditer(text):
         clean_parts.append(text[pos:m.start()])
         out_len += m.start() - pos
-        inner = m.group(1)
+        inner = m.group(1) if m.group(1) is not None else m.group(2)
         clean_parts.append(inner)
-        spans.append((out_len, out_len + len(inner)))
+        (spans if m.group(1) is not None else foreign_spans).append((out_len, out_len + len(inner)))
         out_len += len(inner)
         pos = m.end()
     clean_parts.append(text[pos:])
-    return "".join(clean_parts), spans
+    return "".join(clean_parts), spans, foreign_spans
 
 
 def _split_italic_segments(
@@ -133,7 +139,7 @@ def _split_italic_segments(
     return segments or [(text, False)]
 
 
-def _rpr_has_italic(rpr) -> bool:
+def rpr_has_italic(rpr) -> bool:
     if rpr is None:
         return False
     i = rpr.find(qn("w:i"))
@@ -197,12 +203,15 @@ def _suppress_respacing_opcodes(opcodes, orig: str, corr: str):
     A pure insertion into a gap that had no whitespace at all (e.g. adding
     the missing space between two run-together words) is left untouched:
     that's a real, visible fix, distinguishable here by a1 == a2 (nothing
-    of the original is being touched)."""
+    of the original is being touched). So is removing a space outright
+    ("Morals —teachers" -> "Morals—teachers", "word ." -> "word."): the
+    two sides now touch, which is visible, and suppressing it used to drop
+    the fix silently."""
     suppressed = []
     for tag, a1, a2, b1, b2 in opcodes:
         if tag != "equal" and a1 < a2 and orig[a1:a2].isspace():
             corr_span = corr[b1:b2]
-            if corr_span == "" or corr_span.isspace():
+            if corr_span.isspace():
                 suppressed.append(("equal", a1, a2, a1, a2))
                 continue
         suppressed.append((tag, a1, a2, b1, b2))
@@ -234,11 +243,11 @@ def _make_run(text: str, rpr, italic: bool = False) -> object:
     return r
 
 
-def _make_run_with_tracked_italic(text: str, rpr, id_: int, author: str, date: str) -> object:
-    """A run whose text is unchanged but italics were just added to it,
-    tracked via w:rPrChange (Word's mechanism for a reviewable run-property
-    change) rather than wrapped in w:ins, since the text content itself
-    isn't an insertion."""
+def _make_run_with_tracked_italic(text: str, rpr, id_: int, author: str, date: str, italic: bool = True) -> object:
+    """A run whose text is unchanged but italics were just added to it (or
+    removed, with italic=False), tracked via w:rPrChange (Word's mechanism
+    for a reviewable run-property change) rather than wrapped in w:ins,
+    since the text content itself isn't an insertion."""
     r = OxmlElement("w:r")
     new_rpr = copy.deepcopy(rpr) if rpr is not None else OxmlElement("w:rPr")
     r.append(new_rpr)
@@ -248,7 +257,12 @@ def _make_run_with_tracked_italic(text: str, rpr, id_: int, author: str, date: s
     t.text = text
     r.append(t)
 
-    Font(r, None).italic = True  # inserts <w:i/> at its schema-ordered slot
+    if italic:
+        Font(r, None).italic = True  # inserts <w:i/> at its schema-ordered slot
+    else:
+        for tag in ("w:i", "w:iCs"):
+            for el in new_rpr.findall(qn(tag)):
+                new_rpr.remove(el)
 
     change = OxmlElement("w:rPrChange")
     change.set(qn("w:id"), str(id_))
@@ -320,7 +334,10 @@ def build_new_children(
     date: str,
     id_gen: Iterator[int],
     italic_spans: list[tuple[int, int]] = (),
+    roman_spans: list[tuple[int, int]] = (),
 ) -> list[object]:
+    """roman_spans are ranges of the ORIGINAL text whose italics are removed
+    (as a tracked formatting change) where that text is unchanged."""
     opcodes = _char_opcodes(extraction.text, corrected_text)
     opcodes = _suppress_respacing_opcodes(opcodes, extraction.text, corrected_text)
     opcodes = _clip_opcodes(opcodes, extraction.protected_ranges)
@@ -370,13 +387,21 @@ def build_new_children(
                 if it.kind == PROTECTED_CHAR:
                     new_children.append(_make_protected_char_run(it))
                 else:
-                    for seg_text, seg_italic in _split_italic_segments(piece_text, s + shift, italic_spans):
-                        if seg_italic and not _rpr_has_italic(it.rpr):
+                    roman_start = s
+                    for roman_text, roman in _split_italic_segments(piece_text, s, roman_spans):
+                        seg_start, roman_start = roman_start, roman_start + len(roman_text)
+                        if roman and rpr_has_italic(it.rpr):
                             new_children.append(
-                                _make_run_with_tracked_italic(seg_text, it.rpr, next(id_gen), author, date)
+                                _make_run_with_tracked_italic(roman_text, it.rpr, next(id_gen), author, date, italic=False)
                             )
-                        else:
-                            new_children.append(_make_run(seg_text, it.rpr))
+                            continue
+                        for seg_text, seg_italic in _split_italic_segments(roman_text, seg_start + shift, italic_spans):
+                            if seg_italic and not rpr_has_italic(it.rpr):
+                                new_children.append(
+                                    _make_run_with_tracked_italic(seg_text, it.rpr, next(id_gen), author, date)
+                                )
+                            else:
+                                new_children.append(_make_run(seg_text, it.rpr))
             else:  # 'delete' or 'replace': original-side content is deleted
                 new_children.append(
                     _wrap_revision("w:del", next(id_gen), author, date, _make_del_run(piece_text, it.rpr))
@@ -405,16 +430,17 @@ def apply_track_changes(
     date: str,
     id_gen: Iterator[int],
     italic_spans: list[tuple[int, int]] = (),
+    roman_spans: list[tuple[int, int]] = (),
 ) -> None:
     """Rebuild `paragraph` in place so the diff between extraction.text and
     corrected_text is expressed as tracked changes. No-op if the paragraph
     had no editable content, or the text is unchanged and there are no
     italic-only formatting changes to apply either.
     """
-    if (extraction.text == corrected_text and not italic_spans) or not extraction.items:
+    if (extraction.text == corrected_text and not italic_spans and not roman_spans) or not extraction.items:
         return
 
-    new_children = build_new_children(extraction, corrected_text, author, date, id_gen, italic_spans)
+    new_children = build_new_children(extraction, corrected_text, author, date, id_gen, italic_spans, roman_spans)
 
     original_elements = _distinct_original_elements(extraction.items)
     if not original_elements:
@@ -458,3 +484,81 @@ def changed_token_ratio(extraction: ParagraphExtraction, corrected_text: str) ->
         max(i2 - i1, j2 - j1) for tag, i1, i2, j1, j2 in sm.get_opcodes() if tag != "equal"
     )
     return changed / len(orig_words)
+
+
+# Review comments: an issue Gemini flagged but was not confident enough to
+# correct (a tense shift, a sentence fragment, a wrong word) becomes a Word
+# comment anchored on the words it is about, added after the paragraph's
+# tracked changes are in place.
+
+def _visible_text(el) -> str:
+    """The text `el` shows once its tracked changes are accepted: deleted
+    text left out, a tab or break counted as one character as in
+    extraction."""
+    if el.tag == qn("w:del"):
+        return ""
+    if el.tag == qn("w:t"):
+        return el.text or ""
+    if el.tag in (qn("w:tab"), qn("w:br"), qn("w:cr")):
+        return "\t"
+    return "".join(_visible_text(child) for child in el)
+
+
+def _split_plain_run(run, k: int) -> None:
+    """Split a run holding one w:t (and nothing else but its rPr) at text
+    offset k, so a comment can start or end mid-run."""
+    t = run.find(qn("w:t"))
+    tail = copy.deepcopy(run)
+    tail_t = tail.find(qn("w:t"))
+    text = t.text or ""
+    t.text, tail_t.text = text[:k], text[k:]
+    for el in (t, tail_t):
+        el.set("{http://www.w3.org/XML/1998/namespace}space", "preserve")
+    run.addnext(tail)
+
+
+def _is_plain_run(el) -> bool:
+    return el.tag == qn("w:r") and [c.tag for c in el if c.tag != qn("w:rPr")] == [qn("w:t")]
+
+
+def add_review_comment(document, paragraph: Paragraph, quote: str, text: str, author: str, comment_id: int) -> None:
+    """Add a Word comment on the first occurrence of `quote` in the
+    paragraph as it reads after its tracked changes, or on the whole
+    paragraph when the quote can't be found (the comment then names it)."""
+    p = paragraph._p
+
+    def content_children() -> list[tuple[object, int, int]]:
+        spans, pos = [], 0
+        for child in p:
+            n = len(_visible_text(child)) if child.tag != qn("w:pPr") else 0
+            if n:
+                spans.append((child, pos, pos + n))
+            pos += n
+        return spans
+
+    children = content_children()
+    if not children:
+        return
+    visible = "".join(_visible_text(c) for c, _, _ in children)
+    start = visible.find(quote) if quote else -1
+    if start == -1:
+        start, end = 0, len(visible)
+        if quote:
+            text = f"{text} (about: “{quote}”)"
+    else:
+        end = start + len(quote)
+        for offset in (start, end):
+            for child, a, b in content_children():
+                if a < offset < b and _is_plain_run(child):
+                    _split_plain_run(child, offset - a)
+                    break
+        children = content_children()
+
+    covered = [c for c, a, b in children if a < end and b > start]
+    comment = document.comments.add_comment(text=text, author=author, initials="")
+    comment._comment_elm.set(qn("w:id"), str(comment_id))
+    covered[0].addprevious(OxmlElement("w:commentRangeStart", attrs={qn("w:id"): str(comment_id)}))
+    reference = OxmlElement("w:r")
+    reference.append(OxmlElement("w:commentReference", attrs={qn("w:id"): str(comment_id)}))
+    covered[-1].addnext(reference)
+    covered[-1].addnext(OxmlElement("w:commentRangeEnd", attrs={qn("w:id"): str(comment_id)}))

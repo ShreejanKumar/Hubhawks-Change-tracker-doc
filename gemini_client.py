@@ -30,9 +30,19 @@ from config import (
 logger = logging.getLogger(__name__)
 
 
+class ReviewFlag(BaseModel):
+    # "tense", "fragment" or "word_choice"
+    category: str
+    # The exact words in corrected_text the flag is about.
+    quote: str
+    # The issue and suggested fix, addressed to the editor.
+    comment: str
+
+
 class ParagraphCorrection(BaseModel):
     id: int
     corrected_text: str
+    flags: list[ReviewFlag]
 
 
 def _is_fatal_api_error(exc: Exception) -> bool:
@@ -72,19 +82,34 @@ Actively check for, and correct, all of the following. These are real
 errors, not stylistic choices, and are in scope even where they require
 reading more than one word at a time:
 - Missing, doubled, or repeated words (e.g. "the the", "and and").
-- Subject-verb agreement and verb tense errors, including a verb tense that
-  is inconsistent with the tense used in the surrounding sentences of the
-  same scene.
+- Subject-verb agreement and verb tense errors.
+- Tense consistency within a scene. Work out the dominant narrative tense
+  of the passage (from all the paragraphs you were given, not just the
+  current sentence) and find any unexplained shift from past to present or
+  present to past within a continuous scene or sequence of actions: "He
+  began counting eighteen steps. Then he accurately aligns his pace and
+  takes a short jump." shifts into the present ("aligned", "took"). A
+  shift is legitimate, and must be left alone, in direct speech or
+  dialogue, internal thought, a flashback or move to another time, a
+  general truth or factual statement, or a deliberate stylistic device the
+  context clearly supports.
 - Missing or incorrect punctuation around direct address and vocatives
   (e.g. "Good morning Sanjay" needs a comma: "Good morning, Sanjay").
 - Inconsistent quotation marks, spacing around punctuation, and misplaced or
   missing commas.
 - Incomplete or malformed sentences, and incorrect contractions
-  (e.g. "dint" for "didn't"). A sentence that is grammatically incomplete
-  (a fragment that does not stand as deliberate dialogue), ungrammatical in
-  its construction, or unclear because its construction is broken must be
-  repaired, with the smallest change that makes it correct and clear,
-  keeping the author's words, word order and meaning wherever possible.
+  (e.g. "dint" for "didn't"). A sentence that is grammatically incomplete,
+  ungrammatical in its construction, or unclear because its construction
+  is broken must be repaired, with the smallest change that makes it
+  correct and clear, keeping the author's words, word order and meaning
+  wherever possible. That includes a sentence fragment: a sentence with no
+  finite verb, made only of a noun phrase, an adjectival, participial or
+  prepositional phrase, or an incomplete subordinate clause, where a
+  complete sentence is expected ("Wind caressing her curly, short hair
+  like a lullaby would caress her thoughts." has only the participle
+  "caressing"). Fragments are legitimate, and must be left alone, in
+  dialogue, headings and titles, lists, captions, and deliberate literary
+  fragments the context clearly supports.
   For example: "It is not important what your background." → "It is not
   important what your background is."; "I will strongly suggest every
   reader to try it" → "I strongly suggest that every reader try it", and
@@ -95,6 +120,14 @@ reading more than one word at a time:
   similar to a single mark (keep "?!" only inside dialogue where it
   expresses an incredulous question), and a stray ".." to a single full
   stop, or to an ellipsis where a trailing-off is clearly intended.
+- Wrong word class or wrong word: a word whose part of speech or meaning
+  does not fit its position in the sentence, even though it is a valid
+  word on its own. In "fight just to get her — a situation, a
+  prospective, a lover", "prospective" is an adjective where the list
+  needs a noun like "situation" and "lover" ("prospect", "prospective
+  match", "prospective suitor"). Tell apart a grammatical error (wrong
+  word class or usage) from a semantic one (grammatical but apparently
+  not the intended meaning).
 - Unnatural or incorrect idioms, prepositions, and fixed expressions (e.g.
   "did not leave the sight of him" should read "did not let him out of his
   sight"). Correct only the broken phrase itself, not the rest of the sentence.
@@ -121,17 +154,11 @@ reading more than one word at a time:
   as towards, afterwards, judgement, ageing, fulfil, enrol, skilful,
   programme (but computer program), grey, jewellery, aluminium, mum. Under
   American English apply the reverse of each.
-- Quote-mark style: keep the style the manuscript already uses. Look at the
-  dialogue and quotations across all the paragraphs you were given, see
-  whether single (‘ ’) or double (“ ”) quote marks are used for them most
-  often, and make any primary quotation that uses the other style match
-  that majority; a quote within a quote uses the other style. Never convert
-  the manuscript's prevailing style to a different one. Only if the
-  paragraphs give no clear majority, use the {variant} English default:
-  single quote marks for British English, double for American English.
-  Always use typographic (curly) quote marks and apostrophes (‘ ’ “ ”),
-  never straight ones (' "), and turn any straight ones in the text into
-  the matching curly form.
+- Quote marks: never convert quotation marks between single and double;
+  the system sets one style for the whole manuscript after you. Always use
+  typographic (curly) quote marks and apostrophes (‘ ’ “ ”), never straight
+  ones (' "), and turn any straight ones in the text into the matching
+  curly form.
 - Placement of a period or comma against the closing quote mark, per the
   {variant} English convention. Under British English, when a complete
   sentence is quoted (including all dialogue), the period or comma goes
@@ -148,6 +175,23 @@ reading more than one word at a time:
   rather than the "-ed" form; under American English, use the standard
   "-ed" form instead (dreamed, learned, burned, spelled, spilled, leaped,
   smelled, kneeled).
+
+Correct, or flag for the editor (detect, assess the context, then correct
+only when confident). For tense shifts, sentence fragments and wrong
+words, make the correction yourself only when you are highly confident:
+there is exactly one reasonable fix and the intended meaning is clear from
+the context. Leave the text unchanged and add a flag instead when more than
+one correction is grammatically possible, the intended meaning or tense
+cannot be established, the context you were given is not enough, or it
+could be a deliberate literary or stylistic choice. Never guess: a wrong
+"fix" is worse than a flag. Each flag has a "category" ("tense",
+"fragment" or "word_choice"), a "quote" (the exact words of the problem in
+your corrected_text, as short as identifies it: a word, phrase or one
+sentence) and a "comment" for the editor stating the issue and a suggested
+fix, e.g. "Shifts from past to present tense mid-scene; consider
+'aligned … took'." or "Wrong word class: 'prospective' is an adjective
+here; consider 'prospect' or 'prospective suitor'.". Do not flag what you
+corrected, and do not flag anything else (style, spelling, punctuation).
 
 For all of the above — spelling variant, quote-mark style and placement,
 and preterite verb forms — the rules as instructed here are authoritative
@@ -171,14 +215,21 @@ manuscript, it is not a first mention: do not expand it.
 
 You are returning plain text, which has no way to represent italics directly.
 Where the style guide requires italics (for example the title of a book,
-film, play, or similar complete work, or an uncommon non-English word at its
-first appearance) and the text you were given is not already marked, indicate it by wrapping ONLY that exact span in a single
+film, play, or similar complete work) and the text you were given is not
+already marked, indicate it by wrapping ONLY that exact span in a single
 pair of asterisks, e.g. *In Memoriam A.H.H.* — the system converts this
 marker into real italic formatting and removes the asterisks themselves, so
 they must never remain as literal characters in your output. Reserve
 asterisks exclusively for this purpose: never use them for bold, emphasis,
 or any other markdown, never nest a pair inside another, and never leave one
 unmatched.
+
+An uncommon non-English word (one the style guide does not list as common)
+is different: wrap it in a pair of tildes instead, e.g. ~swayamvar~, at
+EVERY appearance in the paragraphs you were given, including where it is
+capitalised (~Kundali~). The system italicises only its first appearance in
+the whole manuscript and keeps every later one in roman, so mark them all
+and never decide which one is first yourself. Use tildes for nothing else.
 
 STYLE GUIDE:
 {style_guide}
@@ -188,7 +239,8 @@ in their original document order. Use the surrounding paragraphs as context
 for tense and terminology consistency, but return corrections for each
 paragraph independently. Return a JSON array with EXACTLY one corrected
 entry per input paragraph, in any order, each with the same "id" and a
-"corrected_text" field. If a paragraph needs no changes, return its "text"
+"corrected_text" field, and a "flags" list (empty when there is nothing
+to flag). If a paragraph needs no changes, return its "text"
 unchanged as "corrected_text". Never omit, merge, or split paragraphs — the
 set of ids in your response must exactly match the set of ids you were
 given."""
@@ -220,35 +272,71 @@ def _build_system_instruction(style_guide_text: str, variant: str, extra_instruc
     return instruction
 
 
+def _generate_config(system_instruction: str, response_schema) -> types.GenerateContentConfig:
+    return types.GenerateContentConfig(
+        system_instruction=system_instruction,
+        response_mime_type="application/json",
+        response_schema=response_schema,
+        thinking_config=types.ThinkingConfig(thinking_level=GEMINI_THINKING_LEVEL),
+        seed=GEMINI_SEED,
+        http_options=types.HttpOptions(
+            timeout=GEMINI_REQUEST_TIMEOUT_MS,
+            retry_options=types.HttpRetryOptions(
+                attempts=GEMINI_RETRY_ATTEMPTS,
+                initial_delay=GEMINI_RETRY_INITIAL_DELAY_S,
+                max_delay=GEMINI_RETRY_MAX_DELAY_S,
+                http_status_codes=GEMINI_RETRYABLE_HTTP_STATUS_CODES,
+            ),
+        ),
+    )
+
+
+FOREIGN_TERMS_INSTRUCTION = """You are a copyeditor applying the STYLE GUIDE below.
+You will receive a JSON array of words and short phrases that the author
+set in italics somewhere in a manuscript, each with an example sentence.
+Return a JSON array of exactly those entries (spelled as given) that are
+an uncommon non-English word or phrase which the style guide says to
+italicise at its first use only and keep in roman after that. Leave out
+English words italicised for emphasis, titles of books, films and other
+works, names of ships, Latin abbreviations such as et al., and any word
+the style guide lists as common enough to need no italics. Return [] if
+none qualify.
+
+STYLE GUIDE:
+{style_guide}"""
+
+
+async def find_foreign_terms(
+    client: genai.Client, candidates: dict[str, str], style_guide_text: str
+) -> list[str]:
+    """Which of the author's italicised words (candidate -> an example
+    sentence) are uncommon non-English words. Gemini can't see the
+    manuscript's formatting, so this is the only way it judges them."""
+    payload = json.dumps([{"term": t, "example": ex} for t, ex in candidates.items()], ensure_ascii=False)
+    response = await client.aio.models.generate_content(
+        model=GEMINI_MODEL,
+        contents=payload,
+        config=_generate_config(FOREIGN_TERMS_INSTRUCTION.format(style_guide=style_guide_text), list[str]),
+    )
+    return [t for t in (response.parsed or []) if t in candidates]
+
+
 async def _call_gemini(
     client: genai.Client,
     paragraphs: list[IndexedParagraph],
     style_guide_text: str,
     variant: str,
     extra_instruction: str,
-) -> dict[int, str]:
+) -> dict[int, ParagraphCorrection]:
     system_instruction = _build_system_instruction(style_guide_text, variant, extra_instruction)
-    payload = json.dumps([{"id": p.id, "text": p.text} for p in paragraphs])
+    # ensure_ascii=False: with the default, Gemini saw "fiancé" as "fiancé"
+    # and sometimes echoed a mangled escape back ("fiance9e").
+    payload = json.dumps([{"id": p.id, "text": p.text} for p in paragraphs], ensure_ascii=False)
 
     response = await client.aio.models.generate_content(
         model=GEMINI_MODEL,
         contents=payload,
-        config=types.GenerateContentConfig(
-            system_instruction=system_instruction,
-            response_mime_type="application/json",
-            response_schema=list[ParagraphCorrection],
-            thinking_config=types.ThinkingConfig(thinking_level=GEMINI_THINKING_LEVEL),
-            seed=GEMINI_SEED,
-            http_options=types.HttpOptions(
-                timeout=GEMINI_REQUEST_TIMEOUT_MS,
-                retry_options=types.HttpRetryOptions(
-                    attempts=GEMINI_RETRY_ATTEMPTS,
-                    initial_delay=GEMINI_RETRY_INITIAL_DELAY_S,
-                    max_delay=GEMINI_RETRY_MAX_DELAY_S,
-                    http_status_codes=GEMINI_RETRYABLE_HTTP_STATUS_CODES,
-                ),
-            ),
-        ),
+        config=_generate_config(system_instruction, list[ParagraphCorrection]),
     )
 
     corrections: list[ParagraphCorrection] = response.parsed or []
@@ -264,7 +352,7 @@ async def _call_gemini(
             candidate.finish_reason if candidate else None,
             response.prompt_feedback, response.text if candidate else None,
         )
-    return {c.id: c.corrected_text for c in corrections}
+    return {c.id: c for c in corrections}
 
 
 async def _call_gemini_with_retries(
@@ -273,7 +361,7 @@ async def _call_gemini_with_retries(
     style_guide_text: str,
     variant: str,
     extra_instruction: str,
-) -> dict[int, str]:
+) -> dict[int, ParagraphCorrection]:
     """_call_gemini's own http_options.retry_options only retries specific
     HTTP status codes. A timeout or connection reset raises a different
     exception and would otherwise get exactly one attempt before the whole
@@ -311,6 +399,7 @@ async def correct_paragraphs(
     style_guide_text: str,
     variant: str,
     extra_instruction: str = "",
+    flags_out: dict[int, list[ReviewFlag]] | None = None,
 ) -> tuple[dict[int, str], set[int]]:
     """Correct a list of paragraphs via Gemini, validating the response's
     id-set matches exactly what was sent. On a transient error or id
@@ -335,6 +424,9 @@ async def correct_paragraphs(
     whole run on the first paragraph it hits instead of grinding through
     every remaining paragraph/chunk in the document repeating the same
     doomed call.
+
+    Gemini's review flags for each paragraph go into `flags_out` when the
+    caller passes one.
     """
     if not paragraphs:
         return {}, set()
@@ -352,7 +444,9 @@ async def correct_paragraphs(
         result = {}
 
     if set(result.keys()) == expected_ids:
-        return result, set()
+        if flags_out is not None:
+            flags_out.update({i: c.flags for i, c in result.items()})
+        return {i: c.corrected_text for i, c in result.items()}, set()
     if result:
         logger.warning(
             "Gemini id mismatch for paragraph ids %d-%d: missing %s, unexpected %s",
@@ -368,8 +462,8 @@ async def correct_paragraphs(
     left, right = split_in_half(paragraphs)
     merged: dict[int, str] = {}
     failed: set[int] = set()
-    left_result, left_failed = await correct_paragraphs(client, left, style_guide_text, variant, extra_instruction)
-    right_result, right_failed = await correct_paragraphs(client, right, style_guide_text, variant, extra_instruction)
+    left_result, left_failed = await correct_paragraphs(client, left, style_guide_text, variant, extra_instruction, flags_out)
+    right_result, right_failed = await correct_paragraphs(client, right, style_guide_text, variant, extra_instruction, flags_out)
     merged.update(left_result)
     merged.update(right_result)
     failed |= left_failed | right_failed

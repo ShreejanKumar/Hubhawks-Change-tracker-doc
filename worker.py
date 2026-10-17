@@ -74,9 +74,9 @@ def process_run(run_id: str) -> int:
         )
         history_store.complete_run(run_id, run["gcs_path"], result)
         logger.info(
-            "Run %s done: %d/%d paragraphs edited, %d failed, %d flagged",
+            "Run %s done: %d/%d paragraphs edited, %d failed, %d flagged, %d review comments",
             run_id, result.edited_paragraphs, result.total_paragraphs,
-            len(result.failed_paragraphs), len(result.flagged_paragraphs),
+            len(result.failed_paragraphs), len(result.flagged_paragraphs), result.review_comments,
         )
         return 0
     except history_store.RunDeletedError:
