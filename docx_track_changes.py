@@ -195,8 +195,8 @@ def _clip_opcodes(opcodes, protected_ranges):
 
 def _suppress_respacing_opcodes(opcodes, orig: str, corr: str):
     """Revert any non-equal opcode that only resizes whitespace which was
-    already present in the original (e.g. a double space collapsed to a
-    single space) back to 'equal, original text'. The deleted/inserted
+    already present in the original (e.g. one space widened to two, or a
+    space swapped for a non-breaking one) back to 'equal, original text'. The deleted/inserted
     content in these opcodes is itself whitespace, which renders as an
     invisible-looking tracked change in Word -- not worth flagging.
 
@@ -206,11 +206,19 @@ def _suppress_respacing_opcodes(opcodes, orig: str, corr: str):
     of the original is being touched). So is removing a space outright
     ("Morals —teachers" -> "Morals—teachers", "word ." -> "word."): the
     two sides now touch, which is visible, and suppressing it used to drop
-    the fix silently."""
+    the fix silently.
+
+    The exception is a run of plain spaces collapsed to one (a double space
+    between sentences): it stays a tracked deletion of the extra spaces,
+    because the client counts a left-in double space as a miss."""
     suppressed = []
     for tag, a1, a2, b1, b2 in opcodes:
         if tag != "equal" and a1 < a2 and orig[a1:a2].isspace():
             corr_span = corr[b1:b2]
+            if corr_span == " " and set(orig[a1:a2]) == {" "}:
+                suppressed.append(("equal", a1, a1 + 1, b1, b2))
+                suppressed.append(("delete", a1 + 1, a2, b2, b2))
+                continue
             if corr_span.isspace():
                 suppressed.append(("equal", a1, a2, a1, a2))
                 continue

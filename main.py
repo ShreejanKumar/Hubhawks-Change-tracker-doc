@@ -371,6 +371,26 @@ def _normalise_dashes(text: str, style: str) -> str:
     return _EM_DASH_RE.sub(" — " if style == "spaced" else "—", text)
 
 
+# Two or more spaces between words or sentences. Gemini rarely collapses
+# them (and the diff used to drop it when it did), so the code does it.
+# Spaces next to a tab or break, and leading/trailing ones, are left alone.
+_MULTI_SPACE_RE = re.compile(r"(?<=\S) {2,}(?=\S)")
+
+# A pronoun dialogue tag after a question, exclamation or comma inside the
+# closing quote is part of the same sentence, so lower case: “Why?” she
+# asked, not “Why?” She asked. Speech verbs only, so an action beat
+# (“Why?” She was shocked.) keeps its capital.
+_DIALOGUE_TAG_RE = re.compile(
+    r"(?<=[?!,…][”’\"] )(He|She|They|We)(?= (?:said|asked|replied|answered|wondered|whispered|shouted|"
+    r"exclaimed|muttered|murmured|cried|yelled|screamed|added|continued|called|questioned|enquired|"
+    r"inquired|remarked|thought|teased|joked|insisted|demanded|begged|pleaded|giggled|laughed)\b)"
+)
+
+
+def _fix_dialogue_tags(text: str) -> str:
+    return _DIALOGUE_TAG_RE.sub(lambda m: m.group(1).lower(), text)
+
+
 def _first_use_italics(
     texts: dict[int, str], terms: set[str], skip_ids: set[int]
 ) -> dict[int, list[tuple[int, int]]]:
@@ -481,10 +501,23 @@ def _postprocess(original: str, corrected: str, quote_style: str, dash_style: st
     corrected = _restore_corrupted_words(original, tc.sanitize_for_xml(corrected))
     corrected = _curl_introduced_straight_quotes(original, corrected)
     corrected = _normalise_dashes(_convert_quotes(corrected, quote_style), dash_style)
+    corrected = _fix_dialogue_tags(_MULTI_SPACE_RE.sub(" ", corrected))
     return _restore_edge_whitespace(original, corrected)
 
 
-_FLAG_LABELS = {"tense": "Tense", "fragment": "Sentence fragment", "word_choice": "Word choice"}
+_FLAG_LABELS = {
+    "tense": "Tense",
+    "fragment": "Sentence fragment",
+    "word_choice": "Word choice",
+    "awkward": "Awkward or unclear",
+    "repetition": "Repetition",
+}
+
+
+def _plain(text: str) -> str:
+    """Flag text without Gemini's *italic*/~foreign~ markers: the quote must
+    match the document's text, and the comment is read as plain text."""
+    return tc.strip_italic_markers(text.strip())[0]
 
 
 @dataclass
@@ -787,7 +820,7 @@ def process_document(
             try:
                 label = _FLAG_LABELS.get(flag.category, "Review")
                 tc.add_review_comment(
-                    document, all_paragraphs[i], flag.quote.strip(), f"{label}: {flag.comment.strip()}",
+                    document, all_paragraphs[i], _plain(flag.quote), f"{label}: {_plain(flag.comment)}",
                     author, next(id_gen),
                 )
                 review_comments += 1

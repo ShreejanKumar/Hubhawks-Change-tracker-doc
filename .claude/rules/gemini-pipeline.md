@@ -40,8 +40,9 @@ History: `C:/Users/kumar/Downloads/README.md` (local, not in the repo) §4.5, §
 
 Passes in `process_document`:
 1. Per paragraph: `_postprocess` (`sanitize_for_xml` → `_restore_corrupted_words` →
-   `_curl_introduced_straight_quotes` → `_convert_quotes` → `_normalise_dashes` →
-   `_restore_edge_whitespace`) → `strip_italic_markers` → `changed_token_ratio` → decide whether the
+   `_curl_introduced_straight_quotes` → `_convert_quotes` → `_normalise_dashes` → collapse double
+   spaces → `_fix_dialogue_tags` (“Why?” She asked → she asked; speech verbs only, so action beats
+   keep their capital) → `_restore_edge_whitespace`) → `strip_italic_markers` → `changed_token_ratio` → decide whether the
    guardrail applies.
 2. All guardrail retries **concurrently** (`_guardrail_retries`, same semaphore cap, one
    single-paragraph request each, exceptions returned per paragraph). They used to run serially,
@@ -84,7 +85,14 @@ Every paragraph step is inside its own try/except. A failure adds it to `failed_
 - Tense shifts within a scene, sentence fragments and wrong-word/word-class errors follow "detect →
   assess context → correct only when confident". Confident fixes are tracked changes; anything else
   comes back in the paragraph's `flags` (`category`, `quote`, `comment`) and becomes a Word comment
-  (`tc.add_review_comment`), never a guessed edit.
+  (`tc.add_review_comment`), never a guessed edit. A sentence Gemini can only partly repair is
+  flagged, never half-fixed.
+- `awkward` (grammatical but tangled or ambiguous) and `repetition` (noticeably repeated sentence
+  structure or word) are always flags, never edits: fixing them would mean rephrasing the author.
+- Deliberate fragments in narration ("Until one day.", "Only him.") are not flagged; the client's
+  file had several such flags. At most two flags per paragraph.
+- `main._plain` strips `*`/`~` markers from a flag's quote and comment (a marker in the quote made it
+  miss the text and fall back to the whole paragraph).
 - `correct_paragraphs(..., flags_out=)` collects them. Main pass and guardrail retry (when the
   retried version is kept) only; sweep flags are ignored. Failed paragraphs get none.
 - Count: `ProcessResult.review_comments` → run doc `review_comments` → shown in the app.

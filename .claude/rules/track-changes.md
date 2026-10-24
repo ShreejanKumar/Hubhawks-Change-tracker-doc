@@ -25,6 +25,8 @@ History: `C:/Users/kumar/Downloads/README.md` (local, not in the repo) §2 "Trac
 - Token diff (`\s+|\w+|[^\w\s]`, `SequenceMatcher(autojunk=False)`), mapped to character offsets.
 - `_suppress_respacing_opcodes`: a change that only resizes whitespace becomes "equal" (it would be
   an invisible revision). Inserting a space where there was none, or removing one outright, is kept.
+  So is a run of plain spaces collapsed to one (a double space, which the client counts as a miss):
+  it becomes a tracked deletion of the extra spaces. `main._MULTI_SPACE_RE` does the collapsing.
 - `changed_token_ratio` / `token_count` (the guardrail) count **words only** (`\w+`), not the diff
   tokens. Whitespace tokens almost always align, which made a full rewrite score only ~0.5.
 - `_clip_opcodes`: any edit that touches a protected range is dropped for its whole span. This is

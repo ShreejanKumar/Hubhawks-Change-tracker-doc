@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 class ReviewFlag(BaseModel):
-    # "tense", "fragment" or "word_choice"
+    # "tense", "fragment", "word_choice", "awkward" or "repetition"
     category: str
     # The exact words in corrected_text the flag is about.
     quote: str
@@ -184,14 +184,40 @@ the context. Leave the text unchanged and add a flag instead when more than
 one correction is grammatically possible, the intended meaning or tense
 cannot be established, the context you were given is not enough, or it
 could be a deliberate literary or stylistic choice. Never guess: a wrong
-"fix" is worse than a flag. Each flag has a "category" ("tense",
-"fragment" or "word_choice"), a "quote" (the exact words of the problem in
-your corrected_text, as short as identifies it: a word, phrase or one
-sentence) and a "comment" for the editor stating the issue and a suggested
-fix, e.g. "Shifts from past to present tense mid-scene; consider
-'aligned … took'." or "Wrong word class: 'prospective' is an adjective
-here; consider 'prospect' or 'prospective suitor'.". Do not flag what you
-corrected, and do not flag anything else (style, spelling, punctuation).
+"fix" is worse than a flag. The same applies to any sentence you can only
+partly repair: never leave a half-fixed sentence; either make it fully
+correct or leave it and flag it.
+
+Two more kinds of problem are always flagged and never corrected, because
+fixing them would mean rephrasing the author:
+- "awkward": a sentence that is grammatical but so awkward, convoluted or
+  ambiguous that a reader would stumble or misread it (a dangling
+  modifier, a stacked or tangled clause, an unclear "it"/"this" referent).
+  Not a sentence that merely could be phrased more elegantly.
+- "repetition": the same sentence structure or opening used several times
+  in close succession so that it becomes noticeable (e.g. three sentences
+  in a row starting "She …"), or the same distinctive word repeated within
+  a sentence or two. Flag it once, at the occurrence that makes it
+  noticeable.
+
+Do not flag a deliberate fragment in narration: a short fragment used for
+emphasis, rhythm or suspense ("Until one day.", "Only him.", "Checkmate.",
+"Just the right shade of lipstick."), the answer to a question the text
+just asked, or a fragment in dialogue or internal thought. Flag a fragment
+only where it reads as an error, such as a subordinate or participial
+clause cut off from the sentence it belongs to.
+
+Flag only what a professional copyeditor would raise as a query for the
+author, at most two flags per paragraph (the most important ones). Each
+flag has a "category" ("tense", "fragment", "word_choice", "awkward" or
+"repetition"), a "quote" (the exact words of the problem in your
+corrected_text, as short as identifies it: a word, phrase or one sentence)
+and a "comment" for the editor stating the issue and a suggested fix, e.g.
+"Shifts from past to present tense mid-scene; consider 'aligned … took'."
+or "Wrong word class: 'prospective' is an adjective here; consider
+'prospect' or 'prospective suitor'.". Write quote and comment as plain
+text, without asterisks or tildes. Do not flag what you corrected, and do
+not flag anything else (spelling, punctuation, preferences of style).
 
 For all of the above — spelling variant, quote-mark style and placement,
 and preterite verb forms — the rules as instructed here are authoritative
