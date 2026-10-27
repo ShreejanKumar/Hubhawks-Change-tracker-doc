@@ -60,9 +60,7 @@ Rules you MUST follow:
 - Correct grammar, punctuation, spelling, and language consistency, and
   repair sentences that are grammatically incorrect, incomplete, or unclear
   because of a broken construction (see below).
-- Do NOT rewrite sentences that are already correct, restructure content, or
-  change the author's voice or style. Never rephrase a grammatical sentence
-  merely to make it sound better.
+- Do NOT rewrite sentences that are already correct.
 - Do NOT generate new content, or expand/shorten passages beyond fixing actual errors.
 - Do NOT translate foreign-language words, names, quotations, or intentionally
   non-English text into English, and never replace a non-English word with
@@ -84,8 +82,7 @@ reading more than one word at a time:
 - Missing, doubled, or repeated words (e.g. "the the", "and and").
 - Subject-verb agreement and verb tense errors.
 - Tense consistency within a scene. Work out the dominant narrative tense
-  of the passage (from all the paragraphs you were given, not just the
-  current sentence) and find any unexplained shift from past to present or
+  of the passage and find any unexplained shift from past to present or
   present to past within a continuous scene or sequence of actions: "He
   began counting eighteen steps. Then he accurately aligns his pace and
   takes a short jump." shifts into the present ("aligned", "took"). A
@@ -128,9 +125,23 @@ reading more than one word at a time:
   match", "prospective suitor"). Tell apart a grammatical error (wrong
   word class or usage) from a semantic one (grammatical but apparently
   not the intended meaning).
+- Articles: a wrong, missing or extra article. Remove "the" before a noun
+  used in a general sense ("trying to make the society happy" → "trying
+  to make society happy"; likewise nature, humanity, mankind in the
+  general sense), add a missing "a", "an" or "the" ("He is doctor" → "He
+  is a doctor"), and use "an" before a vowel sound ("a hour" → "an
+  hour"). Keep "the" where a specific one is meant ("the society she grew
+  up in").
 - Unnatural or incorrect idioms, prepositions, and fixed expressions (e.g.
   "did not leave the sight of him" should read "did not let him out of his
   sight"). Correct only the broken phrase itself, not the rest of the sentence.
+- Non-standard English usage, including constructions common in South
+  Asian English, corrected to standard English every time it occurs, with
+  the smallest change: "since long" → "for a long time", "discuss about" →
+  "discuss", "cope up with" → "cope with", "return back" → "return",
+  "revert back to you" → "get back to you", "one of my friend" → "one of
+  my friends", "prepone" → "bring forward", "out of station" → "out of
+  town", and similar.
 - Redundant phrasing within a sentence, such as an unnecessary repeated verb
   or noun construction (e.g. "tried to lift the box and tried to fit it in"
   can drop the second "tried to"). Tighten only the specific redundant
@@ -215,7 +226,13 @@ corrected_text, as short as identifies it: a word, phrase or one sentence)
 and a "comment" for the editor stating the issue and a suggested fix, e.g.
 "Shifts from past to present tense mid-scene; consider 'aligned … took'."
 or "Wrong word class: 'prospective' is an adjective here; consider
-'prospect' or 'prospective suitor'.". Write quote and comment as plain
+'prospect' or 'prospective suitor'.". The suggested fix in a comment must
+read as natural, idiomatic English that a native-speaking editor would
+write: keep the author's content and as many of their words as possible,
+reordering or adjusting them where needed so the sentence flows. For
+"Running for the bus, her bag fell open.", suggest "As she ran for the
+bus, her bag fell open.", not "Running for the bus, there was her bag,
+which fell open.". Write quote and comment as plain
 text, without asterisks or tildes. Do not flag what you corrected, and do
 not flag anything else (spelling, punctuation, preferences of style).
 
