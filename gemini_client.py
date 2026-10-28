@@ -90,10 +90,47 @@ reading more than one word at a time:
   dialogue, internal thought, a flashback or move to another time, a
   general truth or factual statement, or a deliberate stylistic device the
   context clearly supports.
-- Missing or incorrect punctuation around direct address and vocatives
-  (e.g. "Good morning Sanjay" needs a comma: "Good morning, Sanjay").
-- Inconsistent quotation marks, spacing around punctuation, and misplaced or
-  missing commas.
+- Commas, applied consistently in every paragraph, not only where the
+  error is obvious. Add a missing comma, and fix a misplaced one, in each
+  of these cases:
+  - Between items in a list of three or more, always with the serial
+    (Oxford) comma before the final "and" or "or": "apples, oranges, and
+    bananas".
+  - Before "and", "but", "or", "nor", "for", "so" or "yet" joining two
+    independent clauses: "She wanted to leave, but he asked her to stay."
+    Not when the second part has no subject of its own ("She stood up and
+    left.").
+  - After an introductory clause, phrase, word or transitional adverb,
+    including time and conditional clauses and participial phrases: "When
+    the meeting ended, everyone left.", "After dinner, we went for a
+    walk.", "However, she refused.", "Meanwhile, everyone waited.", "If you
+    need help, call me.", "Walking down the street, she saw him."
+  - Around non-restrictive clauses and appositives, both sides unless the
+    element ends the sentence: "My brother, who lives in Delhi, is
+    visiting.", "Riya, my oldest friend, called me." Never add commas
+    around restrictive (essential) information ("The man who called is
+    here.").
+  - Around a name or term of direct address (vocative): "Riya, come
+    here.", "Thank you, John.", "Good morning, Sanjay."
+  - Between coordinate adjectives, those that would read naturally joined
+    by "and": "a long, difficult journey" (but "a bright red car").
+  - Before a contrasting element: "She wanted tea, not coffee."
+  - To introduce a quotation ("She said, “I don't know.”") and with
+    dialogue tags ("“Come here,” she whispered.").
+  - Around parenthetical or interrupting expressions and absolute phrases:
+    "He was, however, already there.", "She was, in fact, right.", "Her
+    hands trembling, she opened the letter."
+  - Where a sentence would otherwise be misread: "Let's eat, Grandma."
+  - In place names, with a closing comma when the sentence continues:
+    "Delhi, India, is a major city."
+  - Around degrees, credentials and non-restrictive titles after a name:
+    "Ravi Sharma, PhD, spoke at the event.", "Meera Kapoor,
+    Editor-in-Chief, approved the manuscript."
+  Commas in dates and in numbers of a thousand or more follow the style
+  guide. Keep a comma the author used for stylistic separation where it is
+  grammatically correct ("And then, suddenly, everything changed."); do
+  not remove such commas or add new ones for rhythm alone.
+- Inconsistent quotation marks and spacing around punctuation.
 - Incomplete or malformed sentences, and incorrect contractions
   (e.g. "dint" for "didn't"). A sentence that is grammatically incomplete,
   ungrammatical in its construction, or unclear because its construction
@@ -125,13 +162,51 @@ reading more than one word at a time:
   match", "prospective suitor"). Tell apart a grammatical error (wrong
   word class or usage) from a semantic one (grammatical but apparently
   not the intended meaning).
-- Articles: a wrong, missing or extra article. Remove "the" before a noun
-  used in a general sense ("trying to make the society happy" → "trying
-  to make society happy"; likewise nature, humanity, mankind in the
-  general sense), add a missing "a", "an" or "the" ("He is doctor" → "He
-  is a doctor"), and use "an" before a vowel sound ("a hour" → "an
-  hour"). Keep "the" where a specific one is meant ("the society she grew
-  up in").
+- Articles: a wrong, missing or extra article, checked before every noun
+  in every paragraph, not only where the error is obvious. A singular
+  countable noun almost always needs "a", "an" or "the" ("She is writer"
+  → "She is a writer").
+  - "A"/"an" for one non-specific thing: a first mention ("I saw a dog
+    outside."), an unspecified one ("I need a pen."), a member of a
+    category or a profession ("He is a doctor.", "She became an editor."),
+    after "there is/was" ("There was an accident."), in rates and
+    frequencies ("twice a day", "₹500 a month", "60 kilometres an hour"),
+    and in exclamations ("What a shame!").
+  - "A" or "an" by sound, not spelling: "a university", "a European", "a
+    one-time event", "a useful idea", but "an hour", "an honest person",
+    "an MBA", "an umbrella" ("a hour" → "an hour").
+  - "The" for a specific or identifiable one: already mentioned ("I saw a
+    dog. The dog was barking."), known from context ("Please close the
+    door."), unique ("the sun", "the Earth", "the internet", "the
+    President of India"), made specific by a phrase or clause ("The book
+    on the table is mine."), with superlatives and ordinals ("the best
+    book", "the first chapter", "the last page"), instruments being played
+    ("She plays the piano."), a species as a whole ("The tiger is
+    endangered."), and adjectives for a group of people ("the rich", "the
+    elderly").
+  - "The" with proper names that conventionally take it: rivers, seas,
+    oceans, canals, mountain ranges and island groups ("the Ganges", "the
+    Arabian Sea", "the Suez Canal", "the Himalayas", "the Maldives"),
+    countries with plural names or "Republic", "Kingdom", "States" or
+    "Emirates" ("the United States", "the Netherlands"), and organisations
+    and institutions that use it ("the United Nations", "the World Health
+    Organization"). A title that has "The" as part of its name keeps the
+    capital ("The Times").
+  - No article for a general sense: plural or uncountable nouns and
+    abstract ideas used generally ("Books are expensive.", "Water is
+    essential.", "Freedom is important."; "trying to make the society
+    happy" → "trying to make society happy"; likewise nature, humanity,
+    mankind), most proper names ("India", "Delhi", "Mount Everest", never
+    "the India"), languages and school subjects ("She speaks English.",
+    "He studied history."), meals ("We had breakfast."), sports ("He plays
+    cricket."), most diseases ("He has diabetes", but "the flu", "the
+    measles"), transport after "by" ("by train"), and institutions used for
+    their purpose ("She is at school.", "He is in prison.", "He is at
+    university").
+  Keep "the" wherever the noun is made specific ("the society she grew up
+  in", "The dinner we had yesterday was excellent.", "She went to the
+  school to meet the principal."). Under British English a person goes "to
+  hospital" as a patient; under American English, "to the hospital".
 - Unnatural or incorrect idioms, prepositions, and fixed expressions (e.g.
   "did not leave the sight of him" should read "did not let him out of his
   sight"). Correct only the broken phrase itself, not the rest of the sentence.
